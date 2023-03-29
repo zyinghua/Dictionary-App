@@ -1,3 +1,8 @@
+import Messages.FailureResponse;
+import Messages.QueryResponse;
+import Messages.Response;
+import Messages.SuccessResponse;
+import Utils.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -9,14 +14,11 @@ public class Dictionary {
     private final String fileName;
     private ConcurrentHashMap<String, ArrayList<String>> dict = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper;
-    private final AutoFileSaver autoFileSaver;
 
     public Dictionary(String fileName)
     {
         this.fileName = fileName;
         this.objectMapper = new ObjectMapper();
-        this.autoFileSaver = new AutoFileSaver(fileName, this);
-        this.autoFileSaver.start();
         this.loadDictDataFromFile();
     }
 
@@ -34,7 +36,7 @@ public class Dictionary {
         }
         catch (IOException e)
         {
-            System.err.println(e);
+            System.err.println(e.getMessage());
             System.exit(1);
         }
     }
@@ -46,7 +48,7 @@ public class Dictionary {
             this.objectMapper.writeValue(new File(this.fileName), dict);
         } catch (IOException e)
         {
-            System.err.println(e);
+            System.err.println(e.getMessage());
         }
     }
 
@@ -58,54 +60,51 @@ public class Dictionary {
         this.dict = dict;
     }
 
-    public synchronized String addAWord(String word, ArrayList<String> meanings) {
-        /*Simple return: true = success, false otherwise.*/
-        if (!dict.containsKey(word))
+    public Response addAWord(String word, ArrayList<String> meanings) {
+        if (dict.containsKey(word))
+        {
+            return new FailureResponse(Operation.ADD_WORD, Utils.ERROR_WORD_ALREADY_EXISTS);
+        } else if (meanings.size() == 0)
+        {
+            return new FailureResponse(Operation.ADD_WORD, Utils.ERROR_MEANINGS_EMPTY);
+        } else
         {
             dict.put(word, meanings);
-            return "success";
+            return new SuccessResponse(Operation.ADD_WORD);
         }
-        else
+    }
+
+    public Response queryAWord(String word) {
+        if (dict.containsKey(word))
         {
-            return "failure";
+            return new QueryResponse(Operation.QUERY_WORD, word, dict.get(word));
+        } else
+        {
+            return new FailureResponse(Operation.QUERY_WORD, Utils.ERROR_WORD_NOT_FOUND);
         }
     }
 
-    public ArrayList<String> queryAWord(String word) {
-        return dict.getOrDefault(word, null);
-    }
-
-    public String removeAWord(String word) {
+    public Response removeAWord(String word) {
         if (dict.containsKey(word))
         {
             dict.remove(word);
-            return "success";
+            return new SuccessResponse(Operation.REMOVE_WORD);
         }
         else
         {
-            return "failure";
+            return new FailureResponse(Operation.REMOVE_WORD, Utils.ERROR_WORD_NOT_FOUND);
         }
     }
 
-    public String updateAWord(String word, ArrayList<String> newMeanings) {
+    public Response updateAWord(String word, ArrayList<String> newMeanings) {
         if (dict.containsKey(word))
         {
             dict.put(word, newMeanings);
-            return "success";
+            return new SuccessResponse(Operation.UPDATE_WORD);
         }
         else
         {
-            return "failure";
+            return new FailureResponse(Operation.UPDATE_WORD, Utils.ERROR_WORD_NOT_FOUND);
         }
-    }
-
-    public void terminate()
-    {
-        this.autoFileSaver.terminate();
-    }
-
-    public static void main(String[] args) {
-        Dictionary dict = new Dictionary("dict.json");
-
     }
 }

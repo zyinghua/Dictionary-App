@@ -1,17 +1,17 @@
 package Messages;
 
-import Utils.Result;
+import Utils.*;
 
 public class SuccessResponse extends Response{
     private String message;
 
-    public SuccessResponse() {
-        super(Result.SUCCESS);
-        this.message = "";
+    public SuccessResponse(Operation op) {
+        super(op, Result.SUCCESS);
+        this.message = "Success";
     }
 
-    public SuccessResponse(String message) {
-        super(Result.SUCCESS);
+    public SuccessResponse(Operation op, String message) {
+        super(op, Result.SUCCESS);
         this.message = message;
     }
 
@@ -21,5 +21,10 @@ public class SuccessResponse extends Response{
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    @Override
+    public String toString() {
+        return "Operation: " + this.getOp() + ", Status: " + this.getStatus() + ", Message: " + this.getMessage();
     }
 }

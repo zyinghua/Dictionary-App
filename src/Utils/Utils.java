@@ -6,32 +6,10 @@ import Messages.*;
 
 public class Utils {
     public static final String terminateSignal = "#";
+    public static final String ERROR_WORD_ALREADY_EXISTS = "Word already exists in the dictionary.";
+    public static final String ERROR_WORD_NOT_FOUND = "Word is not found in the dictionary.";
 
-    public static String encodeRequest(Request request) {
-        if (request.getOp() == null)
-            return terminateSignal;
-
-        StringBuilder encoded = new StringBuilder(request.getOp() + ";" + request.getWord() + ";");
-
-        if (request instanceof AddUpdateRequest)
-        {
-            for(int i = 0; i < ((AddUpdateRequest) request).getMeanings().size(); i++)
-                encoded.append(((AddUpdateRequest) request).getMeanings().get(i)).append(";");
-        }
-
-        return encoded.toString();
-    }
-
-    public static Request decodeRequest(String encoded)
-    {
-        String[] code = encoded.split(";");
-        ArrayList<String> meanings = new ArrayList<>(Arrays.asList(code).subList(2, code.length));
-
-        if (meanings.size() == 0)
-            return new Request(Operation.valueOf(code[0]), code[1]);
-        else
-            return new AddUpdateRequest(Operation.valueOf(code[0]), code[1], meanings);
-    }
+    public static final String ERROR_MEANINGS_EMPTY = "Attempting to add or update a word must have at least one meaning.";
 }
 
 

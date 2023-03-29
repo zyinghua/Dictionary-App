@@ -1,9 +1,7 @@
 import Messages.*;
 import Utils.*;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,24 +33,26 @@ public class DictionaryClient {
     }
 
     public static void main(String[] args){
-        if (args.length < 1 || args.length > 2) {
+        if (args.length != 2) {
             // Handle invalid number of arguments
             System.out.println("Usage: java -jar DictionaryClient.jar <server-address> <server-port>");
             System.exit(1);
         }
 
-        try
+        try (Socket client = new Socket(args[0], Integer.parseInt(args[1])))
         {
-            Socket client = new Socket(args[0], Integer.parseInt(args[1]));
-            DataOutputStream dos = new DataOutputStream(client.getOutputStream());
-            DataInputStream dis = new DataInputStream(client.getInputStream());
+            InputStream inputStream = client.getInputStream();
+            OutputStream outputStream = client.getOutputStream();
+
+            ObjectOutputStream oos = new ObjectOutputStream(client.getOutputStream());
+            ObjectInputStream ois = new ObjectInputStream(client.getInputStream());
 
             Scanner sc = new Scanner(System.in);
             boolean done = false;
 
             while(!done)
             {
-                Request request = new Request();
+                Request request = null;
 
                 String op = promptOperation(sc);
 
@@ -100,26 +100,49 @@ public class DictionaryClient {
                         request = new AddUpdateRequest(Operation.UPDATE_WORD, wordToUpdate, newMeanings);
                     }
                     case "q" -> done = true;
+                    default -> request = new Request();
                 }
 
-                dos.writeUTF(Utils.encodeRequest(request));
-                dos.flush();
+                if (request != null) {
+                    oos.writeObject(request);
+                    oos.flush();
+                }
 
-                if (!done) System.out.println(dis.readUTF());
+                if (!done) {
+                    try {
+                        Response response = (Response) ois.readObject();
+
+                        if (response instanceof QueryResponse)
+                        {
+                            QueryResponse queryResponse = (QueryResponse) response;
+                            System.out.println("The meanings of the word are: ");
+                            for (String meaning : queryResponse.getMeanings())
+                            {
+                                System.out.println(meaning);
+                            }
+                        }
+                        else
+                        {
+                            System.out.println(response.toString());
+                        }
+
+                    } catch (ClassNotFoundException e) {
+                        System.err.println("[Error] Class not found: " + e.getMessage());
+                    }
+                }
             }
 
-            dos.close();
-            dis.close();
-            client.close();
+            oos.close();
+            ois.close();
         } catch (NumberFormatException e) {
-            System.out.println("Port must be an integer.");
+            System.out.println(e.getMessage() + "\nPort must be an integer.");
             System.exit(1);
         }
         catch (IOException e) {
-            System.out.println("IO Exception encountered on starting up the client.");
+            System.out.println("IO Exception encountered on starting up the client: " + e.getMessage());
             System.exit(1);
         } catch (IllegalArgumentException e) {
-            System.out.println("Port must be between 0 and 65535");
+            System.out.println(e.getMessage() + "\nPort must be between 0 and 65535");
             System.exit(1);
         }
     }
