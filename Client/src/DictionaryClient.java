@@ -3,6 +3,7 @@ import Utils.*;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -136,6 +137,9 @@ public class DictionaryClient {
             ois.close();
         } catch (NumberFormatException e) {
             System.out.println(e.getMessage() + "\nPort must be an integer.");
+            System.exit(1);
+        } catch (UnknownHostException e) {
+            System.out.println("Cannot find the specified host. Please check host name: " + e.getMessage());
             System.exit(1);
         }
         catch (IOException e) {
