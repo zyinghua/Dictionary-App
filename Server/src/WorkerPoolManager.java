@@ -1,5 +1,3 @@
-
-
 public class WorkerPoolManager {
     private final int poolSize;
     private final Worker[] workerPools;
