@@ -59,8 +59,12 @@ public class Worker extends Thread {
                 }
             }
 
-        } catch (IOException | ClassNotFoundException e) {
-            System.err.println("Error: " + e.getMessage());
+        } catch (EOFException e)
+        {
+            System.out.println("Connection ended by client " + clientConn.getInetAddress());
+        }
+        catch (IOException | ClassNotFoundException e) {
+            System.err.println("Error: " + e + " | " + e.getMessage());
         }
     }
 }

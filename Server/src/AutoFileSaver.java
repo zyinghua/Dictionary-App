@@ -15,6 +15,8 @@ public class AutoFileSaver extends Thread{
     @Override
     public void run()
     {
+        System.out.println("[Auto File Saver] Running...");
+
         while(!shutdown)
         {
             try {
@@ -25,6 +27,8 @@ public class AutoFileSaver extends Thread{
 
             this.dict.writeDictDataToFile();
         }
+
+        System.out.println("[Auto File Saver] Finished.");
     }
 
     public void terminate()

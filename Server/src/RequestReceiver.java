@@ -28,7 +28,7 @@ public class RequestReceiver extends Thread{
             }
         }
 
-        System.out.println("[Request Receiver] Finished");
+        System.out.println("[Request Receiver] Finished.");
     }
 
     public void terminate()

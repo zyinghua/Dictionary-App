@@ -28,7 +28,18 @@ public class DictionaryServer {
             Scanner scanner = new Scanner(System.in);
 
             while (!command.equals("quit")) {
+                System.out.println("[Admin panel] Type 'quit' to stop the server: ");
                 command = scanner.nextLine().toLowerCase();
+
+                switch (command) {
+                    case "quit" -> System.out.println("Server stopped.");
+                    case "save" -> {
+                        dict.writeDictDataToFile();
+                        System.out.println("Dictionary saved to file.");
+                    }
+                    case "check dictionary" -> System.out.println(dict.getDict().toString());
+                    default -> System.out.println("Invalid command.");
+                }
             }
 
             requestReceiver.terminate();
