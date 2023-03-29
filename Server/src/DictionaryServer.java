@@ -17,7 +17,7 @@ public class DictionaryServer {
 
             String fileName = args.length == 2 ? args[1] : defaultFileName;
 
-            Dictionary dict = new Dictionary(fileName);
+            Dictionary dict = new Dictionary(args.length == 2, fileName);
             AutoFileSaver autoFileSaver = new AutoFileSaver(fileName, dict);
             autoFileSaver.start();
 

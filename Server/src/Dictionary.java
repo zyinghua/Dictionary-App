@@ -15,11 +15,15 @@ public class Dictionary {
     private ConcurrentHashMap<String, ArrayList<String>> dict = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper;
 
-    public Dictionary(String fileName)
+    public Dictionary(boolean isFileProvided, String fileName)
     {
         this.fileName = fileName;
         this.objectMapper = new ObjectMapper();
-        this.loadDictDataFromFile();
+
+        if (isFileProvided)
+        {
+            this.loadDictDataFromFile();
+        }
     }
 
     private void loadDictDataFromFile()
