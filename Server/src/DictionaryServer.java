@@ -1,9 +1,15 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Scanner;
+import java.util.concurrent.*;
 
 public class DictionaryServer {
     private static final String defaultFileName = "dictionary_data.json"; // Used when no default file is provided
+    private static final int corePoolSize = 20;
+    private static final int maximumPoolSize = 40;
+    private static final long keepAliveTime = 60L;
+    private static final int queueCapacity = 100;
+
 
     public static void main(String[] args){
         if (args.length < 1 || args.length > 2) {
@@ -13,7 +19,7 @@ public class DictionaryServer {
         }
 
         try (ServerSocket serverSocket = new ServerSocket(Integer.parseInt(args[0]))) {
-            System.out.println("Server started.");
+            System.out.println("Server started. Listening on port " + args[0] + " for incoming connections...");
 
             String fileName = args.length == 2 ? args[1] : defaultFileName;
 
@@ -21,7 +27,8 @@ public class DictionaryServer {
             AutoFileSaver autoFileSaver = new AutoFileSaver(fileName, dict);
             autoFileSaver.start();
 
-            RequestReceiver requestReceiver = new RequestReceiver(serverSocket, dict);
+            RequestReceiver requestReceiver = new RequestReceiver(serverSocket, dict,
+                    corePoolSize, maximumPoolSize, keepAliveTime, queueCapacity);
             requestReceiver.start();
 
             String command = "";
@@ -32,7 +39,7 @@ public class DictionaryServer {
                 command = scanner.nextLine().toLowerCase();
 
                 switch (command) {
-                    case "quit" -> System.out.println("Server stopped.");
+                    case "quit" -> System.out.println("Server stopping...");
                     case "save" -> {
                         dict.writeDictDataToFile();
                         System.out.println("Dictionary saved to file.");
