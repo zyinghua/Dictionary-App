@@ -5,11 +5,8 @@ import java.io.*;
 import java.net.Socket;
 
 public class Task implements Runnable {
-    Socket clientConn;
-    Dictionary dict;
-
-    public Task() {
-    }
+    private Socket clientConn;
+    private Dictionary dict;
 
     public Task(Socket clientConn, Dictionary dict) {
         this.clientConn = clientConn;
@@ -38,6 +35,7 @@ public class Task implements Runnable {
             Request request = (Request) ois.readObject();
 
             oos.writeObject(this.handleRequest(request));
+            oos.flush();
 
             oos.close();
             ois.close();
@@ -49,5 +47,9 @@ public class Task implements Runnable {
         catch (IOException | ClassNotFoundException e) {
             System.err.println("Error: " + e + " | " + e.getMessage());
         }
+    }
+
+    public Socket getClientConn() {
+        return clientConn;
     }
 }

@@ -2,10 +2,10 @@ import java.util.concurrent.*;
 
 public class WorkerPoolManager {
     private static final int timeout = 5000;
-    private int corePoolSize;
-    private int maxPoolSize;
-    private long keepAliveTime;
-    private int queueCapacity;
+    private final int corePoolSize;
+    private final int maxPoolSize;
+    private final long keepAliveTime;
+    private final int queueCapacity;
     private ThreadPoolExecutor threadPoolExecutor;
     public WorkerPoolManager(int corePoolSize, int maxPoolSize, long keepAliveTime, int queueCapacity) {
         this.corePoolSize = corePoolSize;
@@ -29,7 +29,12 @@ public class WorkerPoolManager {
         try {
             this.threadPoolExecutor.execute(task);
         } catch (RejectedExecutionException e) {
-            System.err.println("[Worker Pool Manager] Rejected Execution Exception: " + e.getMessage());
+            System.err.println("[Worker Pool Manager] Rejected Execution (Task from client: "
+                    + ((Task) task).getClientConn().getInetAddress() + ").\n Exception: " + e.getMessage());
+
+            // send a failure response to the client
+            new RejectedRequestHandler(((Task) task).getClientConn()).start();
+
         } catch (NullPointerException e) {
             System.err.println("[Worker Pool Manager] Null Pointer Exception: " + e.getMessage() + ", Cause: " + e.getCause());
         }

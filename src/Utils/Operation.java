@@ -3,6 +3,7 @@ package Utils;
 import java.util.Arrays;
 
 public enum Operation {
+    UNKNOWN (0),
     ADD_WORD(1),
     REMOVE_WORD (2),
     QUERY_WORD (3),
@@ -24,6 +25,7 @@ public enum Operation {
                 return op;
             }
         }
-        throw new IllegalArgumentException("No Operation enum constant with value " + String.valueOf(value));
+
+        return UNKNOWN;
     }
 }
