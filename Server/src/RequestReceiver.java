@@ -1,3 +1,8 @@
+/*
+    @Author: Yinghua Zhou
+    Student ID: 1308266
+ */
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.ServerSocket;

@@ -1,4 +1,7 @@
-
+/*
+    @Author: Yinghua Zhou
+    Student ID: 1308266
+ */
 
 public class AutoFileSaver extends Thread{
     private final String fileName;

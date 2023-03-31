@@ -1,8 +1,9 @@
-package Utils;
+/*
+    @Author: Yinghua Zhou
+    Student ID: 1308266
+ */
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import Messages.*;
+package Utils;
 
 public class Utils {
     public static final String WORD_REGEX = "^[^\\s]*$";
