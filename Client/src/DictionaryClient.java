@@ -14,6 +14,10 @@ import java.util.List;
 import java.util.Scanner;
 
 public class DictionaryClient {
+    public static final String ERROR_EMPTY_WORD = "Please enter a word.";
+    public static final String ERROR_INVALID_WORD = "Word must not have any spaces, please try again.";
+    public static final String ERROR_EMPTY_MEANING = "Please enter at least one meaning.";
+
     private static String promptOperation(Scanner sc)
     {
         while(true)
@@ -38,6 +42,11 @@ public class DictionaryClient {
         }
     }
 
+    public static boolean checkWordValidity(String word)
+    {
+        return word.matches(Utils.WORD_REGEX);
+    }
+
     private static String promptWord(Scanner sc)
     {
         while(true)
@@ -45,13 +54,13 @@ public class DictionaryClient {
             System.out.println("Please enter the word: ");
             String word = sc.nextLine().toLowerCase();
 
-            if (word.matches(Utils.WORD_REGEX))
+            if (checkWordValidity(word))
             {
                 return word;
             }
             else
             {
-                System.out.println("Word must not have any spaces, please try again.\n");
+                System.out.println(ERROR_INVALID_WORD + "\n");
             }
         }
     }
@@ -84,7 +93,11 @@ public class DictionaryClient {
                             if (!input.isEmpty()) {
                                 meanings.add(input);
                             } else {
-                                break;
+                                if(meanings.isEmpty())
+                                    System.out.println(ERROR_EMPTY_MEANING + "\n");
+                                else {
+                                    break;
+                                }
                             }
                         }
                         request = new AddUpdateRequest(Operation.ADD_WORD, wordToAdd, meanings);
@@ -107,7 +120,11 @@ public class DictionaryClient {
                             if (!input.isEmpty()) {
                                 newMeanings.add(input);
                             } else {
-                                break;
+                                if(newMeanings.isEmpty())
+                                    System.out.println(ERROR_EMPTY_MEANING + "\n");
+                                else {
+                                    break;
+                                }
                             }
                         }
                         request = new AddUpdateRequest(Operation.UPDATE_WORD, wordToUpdate, newMeanings);
