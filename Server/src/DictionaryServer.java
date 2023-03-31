@@ -50,9 +50,11 @@ public class DictionaryServer {
                         System.out.println("Dictionary saved to file.");
                     }
                     case "check dictionary" -> System.out.println(dict.getDict().toString());
-                    case "help" -> System.out.println("Type 'quit' to stop the server\n " +
-                            "Type 'save' to save the dictionary data into file\n " +
-                            "Type 'check dictionary' to check the dictionary data\n");
+                    case "help" -> System.out.println("""
+                            Type 'quit' to stop the server.
+                            Type 'save' to save the dictionary data into file.
+                            Type 'check dictionary' to check the dictionary data.
+                            """);
                     default -> System.out.println("Invalid command.");
                 }
             }
