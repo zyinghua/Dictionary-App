@@ -18,16 +18,16 @@ public class DictionaryClient {
     {
         while(true)
         {
-            System.out.println("Input '1' for adding a new word.");
-            System.out.println("Input '2' for removing a word.");
-            System.out.println("Input '3' for querying a word.");
-            System.out.println("Input '4' for updating a word.");
-            System.out.println("Input 'q' to quit the program.");
+            System.out.println("Input 'add' for adding a new word.");
+            System.out.println("Input 'remove' for removing a word.");
+            System.out.println("Input 'query' for querying a word.");
+            System.out.println("Input 'update' for updating a word.");
+            System.out.println("Input 'quit' to quit the program.");
 
             System.out.println("Please select an operation from above: ");
             String op = sc.nextLine().toLowerCase();
 
-            if (List.of("1", "2", "3", "4", "q").contains(op))
+            if (List.of("add", "remove", "query", "update", "quit").contains(op))
             {
                 return op;
             }
@@ -74,7 +74,7 @@ public class DictionaryClient {
                 String op = promptOperation(sc);
 
                 switch (op) {
-                    case "1" -> {
+                    case "add" -> {
                         String wordToAdd = promptWord(sc);
                         ArrayList<String> meanings = new ArrayList<>();
                         while (true) {
@@ -89,15 +89,15 @@ public class DictionaryClient {
                         }
                         request = new AddUpdateRequest(Operation.ADD_WORD, wordToAdd, meanings);
                     }
-                    case "2" -> {
+                    case "remove" -> {
                         String wordToRemove = promptWord(sc);
                         request = new Request(Operation.REMOVE_WORD, wordToRemove);
                     }
-                    case "3" -> {
+                    case "query" -> {
                         String wordToQuery = promptWord(sc);
                         request = new Request(Operation.QUERY_WORD, wordToQuery);
                     }
-                    case "4" -> {
+                    case "update" -> {
                         String wordToUpdate = promptWord(sc);
                         ArrayList<String> newMeanings = new ArrayList<>();
                         while (true) {
@@ -112,7 +112,7 @@ public class DictionaryClient {
                         }
                         request = new AddUpdateRequest(Operation.UPDATE_WORD, wordToUpdate, newMeanings);
                     }
-                    case "q" -> done = true;
+                    case "quit" -> done = true;
                 }
 
                 if (!done && request != null) {

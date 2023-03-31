@@ -40,7 +40,7 @@ public class DictionaryServer {
             Scanner scanner = new Scanner(System.in);
 
             while (!command.equals("quit")) {
-                System.out.println("[Admin panel] Type 'quit' to stop the server: ");
+                System.out.println("[Admin panel] Type 'help' to see the valid commands: ");
                 command = scanner.nextLine().toLowerCase();
 
                 switch (command) {
@@ -50,6 +50,9 @@ public class DictionaryServer {
                         System.out.println("Dictionary saved to file.");
                     }
                     case "check dictionary" -> System.out.println(dict.getDict().toString());
+                    case "help" -> System.out.println("Type 'quit' to stop the server\n " +
+                            "Type 'save' to save the dictionary data into file\n " +
+                            "Type 'check dictionary' to check the dictionary data\n");
                     default -> System.out.println("Invalid command.");
                 }
             }
