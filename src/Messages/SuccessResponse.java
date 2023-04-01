@@ -12,7 +12,7 @@ public class SuccessResponse extends Response{
 
     public SuccessResponse(Operation op) {
         super(op, Result.SUCCESS);
-        this.message = "Success";
+        this.message = null;
     }
 
     public SuccessResponse(Operation op, String message) {
@@ -30,6 +30,6 @@ public class SuccessResponse extends Response{
 
     @Override
     public String toString() {
-        return "Operation: " + this.getOp() + ", Status: " + this.getStatus() + ", Message: " + this.getMessage();
+        return "Operation: " + this.getOp() + ", Status: " + this.getStatus() + (this.message == null ? "" : (", Message: " + this.getMessage()));
     }
 }

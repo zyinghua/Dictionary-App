@@ -65,113 +65,39 @@ public class DictionaryClient {
         }
     }
 
-    public static void main(String[] args){
-        if (args.length != 2) {
-            // Handle invalid number of arguments
-            System.out.println("Usage: java -jar DictionaryClient.jar <server-address> <server-port>");
-            System.exit(1);
-        }
+    public static void checkServerValidity(String serverAddress, int serverPort)
+    {
+        Request request = new Request(Operation.ALIVE_MESSAGE, null);
+        sendRequest(request, serverAddress, serverPort);
+    }
 
+    public static Response sendRequest(Request request, String serverAddress, int serverPort)
+    {
+        // Responsible for sending the request to the server and returning the response
         try
         {
-            Scanner sc = new Scanner(System.in);
-            boolean done = false;
+            Socket client = new Socket(serverAddress, serverPort);
 
-            while(!done)
-            {
-                Request request = null;
-                String op = promptOperation(sc);
+            ObjectOutputStream oos = new ObjectOutputStream(client.getOutputStream());
+            ObjectInputStream ois = new ObjectInputStream(client.getInputStream());
 
-                switch (op) {
-                    case "add" -> {
-                        String wordToAdd = promptWord(sc);
-                        ArrayList<String> meanings = new ArrayList<>();
-                        while (true) {
-                            System.out.println("Add a meaning for the word, or press enter to conclude: ");
-                            String input = sc.nextLine();
+            oos.writeObject(request);
+            oos.flush();
 
-                            if (!input.isEmpty()) {
-                                meanings.add(input);
-                            } else {
-                                if(meanings.isEmpty())
-                                    System.out.println(ERROR_EMPTY_MEANING + "\n");
-                                else {
-                                    break;
-                                }
-                            }
-                        }
-                        request = new AddUpdateRequest(Operation.ADD_WORD, wordToAdd, meanings);
-                    }
-                    case "remove" -> {
-                        String wordToRemove = promptWord(sc);
-                        request = new Request(Operation.REMOVE_WORD, wordToRemove);
-                    }
-                    case "query" -> {
-                        String wordToQuery = promptWord(sc);
-                        request = new Request(Operation.QUERY_WORD, wordToQuery);
-                    }
-                    case "update" -> {
-                        String wordToUpdate = promptWord(sc);
-                        ArrayList<String> newMeanings = new ArrayList<>();
-                        while (true) {
-                            System.out.println("Add a meaning for the word, or press enter to conclude: ");
-                            String input = sc.nextLine();
+            Response response = (Response) ois.readObject();
 
-                            if (!input.isEmpty()) {
-                                newMeanings.add(input);
-                            } else {
-                                if(newMeanings.isEmpty())
-                                    System.out.println(ERROR_EMPTY_MEANING + "\n");
-                                else {
-                                    break;
-                                }
-                            }
-                        }
-                        request = new AddUpdateRequest(Operation.UPDATE_WORD, wordToUpdate, newMeanings);
-                    }
-                    case "quit" -> done = true;
-                }
+            oos.close();
+            ois.close();
+            client.close();
 
-                if (!done && request != null) {
-                    Socket client = new Socket(args[0], Integer.parseInt(args[1]));
+            return response;
 
-                    ObjectOutputStream oos = new ObjectOutputStream(client.getOutputStream());
-                    ObjectInputStream ois = new ObjectInputStream(client.getInputStream());
-
-                    oos.writeObject(request);
-                    oos.flush();
-
-                    try {
-                        Response response = (Response) ois.readObject();
-
-                        if (response instanceof QueryResponse)
-                        {
-                            QueryResponse queryResponse = (QueryResponse) response;
-                            System.out.println("The meanings of the word are: ");
-                            for (String meaning : queryResponse.getMeanings())
-                            {
-                                System.out.println(meaning);
-                            }
-                        }
-                        else
-                        {
-                            System.out.println(response.toString());
-                        }
-
-                    } catch (ClassNotFoundException e) {
-                        System.err.println("[Error] Class not found: " + e.getMessage());
-                    }
-
-                    oos.close();
-                    ois.close();
-                    client.close();
-                } else if(!done) {
-                    System.err.println("Invalid request. Please try again...\n");
-                } else {
-                    System.out.println("Quitting the program...");
-                }
-            }
-        } catch (NumberFormatException e) {
+        } catch (ClassNotFoundException e) {
+            String err = "[Error on parsing response] Class not found: " + e.getMessage();
+            System.err.println(err);
+            return new FailureResponse(Operation.UNKNOWN, err);
+        }
+        catch (NumberFormatException e) {
             System.out.println(e.getMessage() + "\nPort must be an integer.");
             System.exit(1);
         } catch (UnknownHostException e) {
@@ -184,6 +110,129 @@ public class DictionaryClient {
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage() + "\nPort must be between 0 and 65535");
             System.exit(1);
+        }
+
+        return new FailureResponse(Operation.UNKNOWN, "Unknown error when sending request.");
+    }
+
+    public static void main(String[] args){
+        if (args.length != 2) {
+            // Handle invalid number of arguments
+            System.out.println("Usage: java -jar DictionaryClient.jar <server-address> <server-port>");
+            System.exit(1);
+        }
+
+
+        checkServerValidity(args[0], Integer.parseInt(args[1]));
+
+        Scanner sc = new Scanner(System.in);
+        boolean done = false;
+
+        while(!done)
+        {
+            Request request = null;
+            String op = promptOperation(sc);
+
+            switch (op) {
+                case "add" -> {
+                    String wordToAdd = promptWord(sc);
+                    ArrayList<String> meanings = new ArrayList<>();
+                    while (true) {
+                        System.out.println("""
+                                    Add a meaning for the word, or：
+                                     Press enter to conclude,
+                                     Type '#' to cancel the current operation:\s""");
+                        String input = sc.nextLine();
+
+                        if (!input.isEmpty()) {
+                            if (input.equals("#")) {
+                                // Cancel the current operation
+                                request = new Request(Operation.CANCELLED, null);
+                                break;
+                            }
+                            else{
+                                // Add the meaning to the list
+                                meanings.add(input);
+                            }
+                        } else {
+                            if(meanings.isEmpty())
+                                // The user did not enter any meaning
+                                System.out.println(ERROR_EMPTY_MEANING + "\n");
+                            else {
+                                // The user has finished entering meanings
+                                request = new AddUpdateRequest(Operation.ADD_WORD, wordToAdd, meanings);
+                                break;
+                            }
+                        }
+                    }
+                }
+                case "remove" -> {
+                    String wordToRemove = promptWord(sc);
+                    request = new Request(Operation.REMOVE_WORD, wordToRemove);
+                }
+                case "query" -> {
+                    String wordToQuery = promptWord(sc);
+                    request = new Request(Operation.QUERY_WORD, wordToQuery);
+                }
+                case "update" -> {
+                    String wordToUpdate = promptWord(sc);
+                    ArrayList<String> newMeanings = new ArrayList<>();
+                    while (true) {
+                        System.out.println("""
+                                Add a meaning for the word, or：
+                                 Press enter to conclude,
+                                 Type '#' to cancel the current operation:\s""");
+                        String input = sc.nextLine();
+
+                        if (!input.isEmpty()) {
+                            if (input.equals("#")) {
+                                // Cancel the current operation
+                                request = new Request(Operation.CANCELLED, null);
+                                break;
+                            } else {
+                                // Add the meaning to the list
+                                newMeanings.add(input);
+                            }
+                        } else {
+                            if (newMeanings.isEmpty())
+                                // The user did not enter any meaning
+                                System.out.println(ERROR_EMPTY_MEANING + "\n");
+                            else {
+                                // The user has finished entering meanings
+                                request = new AddUpdateRequest(Operation.UPDATE_WORD, wordToUpdate, newMeanings);
+                                break;
+                            }
+                        }
+                    }
+                }
+                case "quit" -> done = true;
+            }
+
+            if (!done && request != null && request.getOp() != Operation.CANCELLED) {
+
+                Response response = sendRequest(request, args[0], Integer.parseInt(args[1]));
+
+                if (response instanceof QueryResponse)
+                {
+                    QueryResponse queryResponse = (QueryResponse) response;
+                    System.out.println("The meanings of the word are: ");
+                    for (String meaning : queryResponse.getMeanings())
+                    {
+                        System.out.println(meaning);
+                    }
+                }
+                else
+                {
+                    System.out.println(response.toString());
+                }
+
+            } else if (done) {
+                System.out.println("Quitting the program...");
+            } else if(request == null) {
+                System.err.println("Invalid request. Please try again...\n");
+            } else {
+                System.out.println("Operation cancelled.\n");
+            }
         }
     }
 }

@@ -10,7 +10,9 @@ public enum Operation {
     ADD_WORD(1),
     REMOVE_WORD (2),
     QUERY_WORD (3),
-    UPDATE_WORD (4);
+    UPDATE_WORD (4),
+    CANCELLED (5),
+    ALIVE_MESSAGE (6);
 
     private final int index;
 

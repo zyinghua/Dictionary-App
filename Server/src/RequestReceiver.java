@@ -35,6 +35,7 @@ public class RequestReceiver extends Thread{
                 this.workerPoolManager.executeTask(new Task(clientConn, dict));
             } catch (SocketException e) {
                 if (e.getMessage().equals("Socket closed")) {
+                    // server socket is closed, this thread was called to terminate
                     System.out.println("[Request Receiver] Server closed.");
                 } else {
                     System.out.println("[Request Receiver] Socket Exception: " + e.getMessage());

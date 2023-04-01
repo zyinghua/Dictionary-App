@@ -18,7 +18,6 @@ public class ClientCRUDGUI extends JFrame {
     private static final String PROMPT_ADDITIONAL_MEANINGS = "[Optional] Please enter another meaning of the word: ";
     private final HintTextField inputField;
     private final JButton addMeaningButton;
-    private String ConfirmBtnText;
 
     private int state = 0;  // 0 = word not entered, 1 = word entered, 2+ = respective number - 1 of meanings entered
     public ClientCRUDGUI(JFrame previousFrame, Operation op) {
@@ -101,6 +100,7 @@ public class ClientCRUDGUI extends JFrame {
                         else
                         {
                             // Ready to send request
+
                         }
                     }
                     else if(inputField.getText().equals(PROMPT_WORD) || inputField.getText().equals(""))
