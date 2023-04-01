@@ -33,7 +33,7 @@ public class ClientCRUDGUI extends JFrame {
     private StyledDocument textPaneDoc;
     Request request;
     private int state = 0;  // 0 = word not entered, 1 = word entered, 2+ = respective number - 1 of meanings entered
-    private Style redText, blackText, blueText;
+    private final Style redText, blackText, blueText, greyText;
     private static final int USER_INPUT = 0;
     private static final int SERVER_VALID_RESPONSE = 1;
     private static final int SERVER_ERROR_RESPONSE = 2;
@@ -53,6 +53,12 @@ public class ClientCRUDGUI extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 dispose();
                 previousFrame.setVisible(true);
+                try {
+                    previousFrame.preservedRequestHistory = textPaneDoc.getText(0, textPaneDoc.getLength());
+                } catch (BadLocationException ex) {
+                    JOptionPane.showMessageDialog(null, "[Internal Error] Operation at an invalid position " +
+                            "when saving text from the screen.", "Bad Location Exception", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
@@ -75,6 +81,15 @@ public class ClientCRUDGUI extends JFrame {
         StyleConstants.setForeground(this.blackText, Color.BLACK);
         this.blueText = this.textPaneDoc.addStyle("blue", null);
         StyleConstants.setForeground(this.blueText, Color.BLUE);
+        this.greyText = this.textPaneDoc.addStyle("grey", null);
+        StyleConstants.setForeground(this.greyText, Color.GRAY);
+
+        try{
+            this.textPaneDoc.insertString(0, previousFrame.preservedRequestHistory, greyText);
+        } catch (BadLocationException e) {
+            JOptionPane.showMessageDialog(null, "[Internal Error] Operation at an invalid position " +
+                    "when loading history request text to the screen.", "Bad Location Exception", JOptionPane.ERROR_MESSAGE);
+        }
 
         midPanel.add(this.textPane, BorderLayout.CENTER);
         ScrollPane scrollPane = new ScrollPane();

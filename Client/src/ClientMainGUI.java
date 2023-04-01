@@ -33,6 +33,7 @@ public class ClientMainGUI extends JFrame{
     private static final String REMOVE_BTN_TEXT = "Remove a word";
     private static final String QUERY_BTN_TEXT = "Query a word";
     private static final String UPDATE_BTN_TEXT = "Update a word";
+    public String preservedRequestHistory = "";
 
     public String serverAddress;
     public int serverPort;
