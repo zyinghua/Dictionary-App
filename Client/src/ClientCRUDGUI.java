@@ -22,11 +22,13 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
 public class ClientCRUDGUI extends JFrame {
+    private Operation op;
     private static final String PROMPT_WORD = "Please enter the word: ";
     private static final String PROMPT_MEANINGS = "Please enter a meaning of the word: ";
     private static final String PROMPT_ADDITIONAL_MEANINGS = "[Optional] Please enter another meaning of the word: ";
     private final HintTextField inputField;
     private final JButton addMeaningButton;
+    private final JButton confirmButton;
     private final JTextPane textPane;
     private StyledDocument textPaneDoc;
     Request request;
@@ -40,7 +42,8 @@ public class ClientCRUDGUI extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(ClientMainGUI.FRAME_WIDTH, ClientMainGUI.FRAME_HEIGHT);
 
-        initialiseRequest(op);
+        this.op = op;
+        initialiseRequest();
 
         JPanel panel = new JPanel(new BorderLayout());  // Main panel
 
@@ -93,6 +96,8 @@ public class ClientCRUDGUI extends JFrame {
                 }
                 else
                 {
+                    ((AddUpdateRequest) request).addMeaning(inputField.getText());
+
                     appendTextToTextPane(USER_INPUT, "Meaning " + state + ": " + inputField.getText() + "\n");
                     resetJTextFieldPrompt(++state);
                 }
@@ -105,8 +110,8 @@ public class ClientCRUDGUI extends JFrame {
 
         // Create the confirm button panel
         JPanel confirmPanel = new JPanel(new GridBagLayout());
-        JButton confirmButton = new JButton(op == Operation.ADD_WORD || op == Operation.UPDATE_WORD ? "Next" : "Confirm");
-        confirmButton.addActionListener(new ActionListener() {
+        this.confirmButton = new JButton(op == Operation.ADD_WORD || op == Operation.UPDATE_WORD ? "Next" : "Confirm");
+        this.confirmButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (state == 0)
@@ -127,8 +132,8 @@ public class ClientCRUDGUI extends JFrame {
                         else
                         {
                             // Ready to send request
-                            resetStateAndJTextFieldPrompt();
                             Response response = DictionaryClient.sendRequest(true, request, previousFrame.serverAddress, previousFrame.serverPort);
+                            resetAllToInitialState(); // Clear the data relevant to the previous operation which the response has been received
                             handleResponse(response);
                         }
                     }
@@ -150,25 +155,28 @@ public class ClientCRUDGUI extends JFrame {
                     else
                     {
                         // Ready to send request
-                        appendTextToTextPane(USER_INPUT, "Meaning: " + inputField.getText() + "\n");
-                        resetStateAndJTextFieldPrompt();
+                        ((AddUpdateRequest) request).addMeaning(inputField.getText());
+                        appendTextToTextPane(USER_INPUT, "Meaning " + state + ": " + inputField.getText() + "\n");
+
+                        Response response = DictionaryClient.sendRequest(true, request, previousFrame.serverAddress, previousFrame.serverPort);
+                        resetAllToInitialState(); // Clear the data relevant to the previous operation which the response has been received
+                        handleResponse(response);
                     }
                 }
                 else
                 {
                     // Ready to send request
 
-                    if(inputField.getForeground() == Color.gray || inputField.getText().equals(""))
-                    {
-
-                    }
-                    else
+                    if(inputField.getForeground() != Color.gray && !inputField.getText().equals(""))
                     {
                         // If another meaning available in the text field, add it to the request
+                        ((AddUpdateRequest) request).addMeaning(inputField.getText());
                         appendTextToTextPane(USER_INPUT, "Meaning " + state + ": " + inputField.getText() + "\n");
-                        resetStateAndJTextFieldPrompt();
                     }
 
+                    Response response = DictionaryClient.sendRequest(true, request, previousFrame.serverAddress, previousFrame.serverPort);
+                    resetAllToInitialState(); // Clear the data relevant to the previous operation which the response has been received
+                    handleResponse(response);
                 }
 
             }
@@ -249,28 +257,32 @@ public class ClientCRUDGUI extends JFrame {
             // Reset the prompt
             this.inputField.resetHint(PROMPT_MEANINGS);
         }
-        else if (state == 2)
+        else if (state >= 2)
         {
             // Reset the prompt
             this.inputField.resetHint(PROMPT_ADDITIONAL_MEANINGS);
         }
     }
 
-    public void resetStateAndJTextFieldPrompt()
+    public void resetAllToInitialState()
     {
         this.state = 0;
-        resetJTextFieldPrompt(this.state);
+        resetJTextFieldPrompt(this.state); // Reset the prompt
+        initialiseRequest(); // Reset the request
+
+        this.confirmButton.setText(op == Operation.ADD_WORD || op == Operation.UPDATE_WORD ? "Next" : "Confirm"); // Reset the confirm button text
+        this.addMeaningButton.setVisible(false); // Hide the add meaning button
     }
 
-    private void initialiseRequest(Operation op)
+    private void initialiseRequest()
     {
-        if (op == Operation.ADD_WORD || op == Operation.UPDATE_WORD)
+        if (this.op == Operation.ADD_WORD || this.op == Operation.UPDATE_WORD)
         {
-            this.request = new AddUpdateRequest(op);
+            this.request = new AddUpdateRequest(this.op);
         }
         else
         {
-            this.request = new Request(op);
+            this.request = new Request(this.op);
         }
     }
 

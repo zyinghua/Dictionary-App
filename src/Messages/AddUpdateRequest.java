@@ -17,7 +17,7 @@ public class AddUpdateRequest extends Request{
     {
         super(op);
         this.word = null;
-        this.meanings = null;
+        this.meanings = new ArrayList<>();
     }
 
     public AddUpdateRequest(Operation op, String word, ArrayList<String> meanings) {
@@ -40,6 +40,10 @@ public class AddUpdateRequest extends Request{
 
     public void setMeanings(ArrayList<String> meanings) {
         this.meanings = meanings;
+    }
+
+    public void addMeaning(String meaning) {
+        this.meanings.add(meaning);
     }
 
     @Override

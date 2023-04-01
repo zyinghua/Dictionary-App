@@ -114,10 +114,10 @@ public class ClientMainGUI extends JFrame{
         setVisible(true);
         getContentPane().setBackground(new Color(253, 253, 253));
         requestFocusInWindow();
-        closeIfServerConnectionFailure(serverAddress, serverPort);
+        closeIfServerConnectionFail(serverAddress, serverPort);
     }
 
-    private void closeIfServerConnectionFailure(String serverAddress, int serverPort)
+    private void closeIfServerConnectionFail(String serverAddress, int serverPort)
     {
         Response response = DictionaryClient.checkServerValidity(true, serverAddress, serverPort);
 
@@ -126,9 +126,5 @@ public class ClientMainGUI extends JFrame{
             JOptionPane.showMessageDialog(this, ((FailureResponse)response).getMessage());
             System.exit(1);
         }
-    }
-
-    public static void main(String[] args) {
-        new ClientMainGUI("localhost", 8888);
     }
 }

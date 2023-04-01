@@ -21,13 +21,19 @@ public class Task implements Runnable {
     private Response handleRequest(Request request) {
         Response response;
 
-        switch (request.getOp()) {
-            case ALIVE_MESSAGE -> {response = new SuccessResponse(Operation.ALIVE_MESSAGE);}
-            case ADD_WORD -> {response = this.dict.addAWord(request.getWord(), ((AddUpdateRequest) request).getMeanings());}
-            case REMOVE_WORD -> {response = this.dict.removeAWord(request.getWord());}
-            case QUERY_WORD -> {response = this.dict.queryAWord(request.getWord());}
-            case UPDATE_WORD -> {response = this.dict.updateAWord(request.getWord(), ((AddUpdateRequest) request).getMeanings());}
-            default -> {response = new FailureResponse(Operation.UNKNOWN, "Unknown operation");}
+        try{
+            switch (request.getOp()) {
+                case ALIVE_MESSAGE -> {response = new SuccessResponse(Operation.ALIVE_MESSAGE);}
+                case ADD_WORD -> {response = this.dict.addAWord(request.getWord(), ((AddUpdateRequest) request).getMeanings());}
+                case REMOVE_WORD -> {response = this.dict.removeAWord(request.getWord());}
+                case QUERY_WORD -> {response = this.dict.queryAWord(request.getWord());}
+                case UPDATE_WORD -> {response = this.dict.updateAWord(request.getWord(), ((AddUpdateRequest) request).getMeanings());}
+                default -> {response = new FailureResponse(Operation.UNKNOWN, "Unknown operation");}
+            }
+        } catch (NullPointerException e) {
+            response = new FailureResponse(Operation.UNKNOWN, "[Internal Error] Null Pointer Exception encountered on processing request: " + e.getMessage());
+        } catch (Exception e) {
+            response = new FailureResponse(Operation.UNKNOWN, "[Internal Error] Exception encountered on processing request: " + e.getMessage());
         }
 
         return response;
@@ -49,10 +55,10 @@ public class Task implements Runnable {
             clientConn.close();
         } catch (EOFException e)
         {
-            System.err.println("Connection illegally ended by client " + clientConn.getInetAddress());
+            System.err.println("Connection unexpectedly ended by client " + clientConn.getInetAddress());
         }
         catch (IOException | ClassNotFoundException e) {
-            System.err.println("Error: " + e + " | " + e.getMessage());
+            System.err.println("Error on processing request: " +  e.getMessage());
         }
     }
 
