@@ -9,6 +9,7 @@ import java.util.Scanner;
 import java.util.concurrent.*;
 
 public class DictionaryServer {
+    public static final String USAGE = "Usage: java -jar DictionaryServer.jar <port> <dictionary-file>[optional]";
     private static final String defaultFileName = "dictionary_data.json"; // Used when no default file is provided
     private static final int corePoolSize = 20;
     private static final int maximumPoolSize = 40;
@@ -19,7 +20,7 @@ public class DictionaryServer {
     public static void main(String[] args){
         if (args.length < 1 || args.length > 2) {
             // Handle invalid number of arguments
-            System.out.println("Usage: java -jar DictionaryServer.jar <port> <dictionary-file>[optional]");
+            System.out.println(USAGE);
             System.exit(1);
         }
 
@@ -63,14 +64,15 @@ public class DictionaryServer {
             autoFileSaver.terminate();
 
         } catch (NumberFormatException e) {
-            System.out.println("Port must be an integer.");
+            System.out.println(USAGE);
+            System.err.println("Port must be an integer.");
             System.exit(1);
         }
         catch (IOException e) {
-            System.out.println("IO Exception encountered on starting up the server.");
+            System.err.println("IO Exception encountered on starting up the server.");
             System.exit(1);
         } catch (IllegalArgumentException e) {
-            System.out.println("Port must be between 0 and 65535");
+            System.err.println("Port must be between 0 and 65535");
             System.exit(1);
         }
     }

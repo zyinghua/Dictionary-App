@@ -9,13 +9,15 @@ import Utils.*;
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class DictionaryClient {
+    private static final String USAGE = "Usage: java DictionaryClient <serverAddress> <serverPort>";
     public static final String ERROR_EMPTY_WORD = "Please enter a word.";
-    public static final String ERROR_INVALID_WORD = "Word must not have any spaces, please try again.";
+    public static final String ERROR_INVALID_WORD = "Word must not be empty and not have any spaces, please try again.";
     public static final String ERROR_EMPTY_MEANING = "Please enter at least one meaning.";
 
     private static String promptOperation(Scanner sc)
@@ -44,7 +46,7 @@ public class DictionaryClient {
 
     public static boolean checkWordValidity(String word)
     {
-        return word.matches(Utils.WORD_REGEX);
+        return !word.isEmpty() && word.matches(Utils.WORD_REGEX);
     }
 
     private static String promptWord(Scanner sc)
@@ -73,7 +75,7 @@ public class DictionaryClient {
 
     public static Response sendRequest(Request request, String serverAddress, int serverPort)
     {
-        // Responsible for sending the request to the server and returning the response
+        // Responsible for sending the request to the server and returning the response, all exceptions caught here
         try
         {
             Socket client = new Socket(serverAddress, serverPort);
@@ -98,17 +100,19 @@ public class DictionaryClient {
             return new FailureResponse(Operation.UNKNOWN, err);
         }
         catch (NumberFormatException e) {
-            System.out.println(e.getMessage() + "\nPort must be an integer.");
+            System.out.println(USAGE);
+            System.err.println(e.getMessage() + "\nPort must be an integer.");
             System.exit(1);
         } catch (UnknownHostException e) {
-            System.out.println("Cannot find the specified host. Please check host name: " + e.getMessage());
+            System.out.println(USAGE);
+            System.err.println("Cannot find the specified host. Please check host name: " + e.getMessage());
             System.exit(1);
         }
         catch (IOException e) {
-            System.out.println("IO Exception encountered when connecting with the server: " + e.getMessage());
+            System.err.println("IO Exception encountered when connecting with the server: " + e.getMessage());
             System.exit(1);
         } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage() + "\nPort must be between 0 and 65535");
+            System.err.println(e.getMessage() + "\nPort must be between 0 and 65535");
             System.exit(1);
         }
 
@@ -118,10 +122,9 @@ public class DictionaryClient {
     public static void main(String[] args){
         if (args.length != 2) {
             // Handle invalid number of arguments
-            System.out.println("Usage: java -jar DictionaryClient.jar <server-address> <server-port>");
+            System.out.println(USAGE);
             System.exit(1);
         }
-
 
         checkServerValidity(args[0], Integer.parseInt(args[1]));
 
@@ -215,11 +218,12 @@ public class DictionaryClient {
                 if (response instanceof QueryResponse)
                 {
                     QueryResponse queryResponse = (QueryResponse) response;
-                    System.out.println("The meanings of the word are: ");
+                    System.out.println("\nThe meanings of the word are: ");
                     for (String meaning : queryResponse.getMeanings())
                     {
                         System.out.println(meaning);
                     }
+                    System.out.println("\n");
                 }
                 else
                 {

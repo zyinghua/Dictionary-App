@@ -49,7 +49,7 @@ public class Task implements Runnable {
             clientConn.close();
         } catch (EOFException e)
         {
-            System.out.println("Connection illegally ended by client " + clientConn.getInetAddress());
+            System.err.println("Connection illegally ended by client " + clientConn.getInetAddress());
         }
         catch (IOException | ClassNotFoundException e) {
             System.err.println("Error: " + e + " | " + e.getMessage());
