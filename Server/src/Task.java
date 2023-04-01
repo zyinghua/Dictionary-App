@@ -28,7 +28,7 @@ public class Task implements Runnable {
                 case REMOVE_WORD -> {response = this.dict.removeAWord(request.getWord());}
                 case QUERY_WORD -> {response = this.dict.queryAWord(request.getWord());}
                 case UPDATE_WORD -> {response = this.dict.updateAWord(request.getWord(), ((AddUpdateRequest) request).getMeanings());}
-                default -> {response = new FailureResponse(Operation.UNKNOWN, "Unknown operation");}
+                default -> {response = new FailureResponse(Operation.UNKNOWN, "Unknown operation.");}
             }
         } catch (NullPointerException e) {
             response = new FailureResponse(Operation.UNKNOWN, "[Internal Error] Null Pointer Exception encountered on processing request: " + e.getMessage());

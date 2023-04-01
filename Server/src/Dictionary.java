@@ -45,7 +45,7 @@ public class Dictionary {
         }
         catch (IOException e)
         {
-            System.err.println(e.getMessage());
+            System.err.println("IO Exception encountered when loading data from file: " + e.getMessage());
             System.exit(1);
         }
     }
@@ -55,9 +55,13 @@ public class Dictionary {
         // convert the map to a JSON string and write it to a file
         try{
             this.objectMapper.writeValue(new File(this.fileName), dict);
+        } catch (FileNotFoundException e) {
+            System.err.println(e + "\nPlease make sure the relevant file: " + this.fileName + " is not deleted.");
+            System.exit(1);
         } catch (IOException e)
         {
-            System.err.println(e.getMessage());
+            System.err.println("IO Exception encountered when saving data to file: " + e.getMessage());
+            System.exit(1);
         }
     }
 

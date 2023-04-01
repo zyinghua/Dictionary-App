@@ -6,7 +6,6 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Scanner;
-import java.util.concurrent.*;
 
 public class DictionaryServer {
     public static final String USAGE = "Usage: java -jar DictionaryServer.jar <port> <dictionary-file>[optional]";
