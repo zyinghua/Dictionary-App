@@ -1,6 +1,12 @@
 /*
     @author: Yinghua Zhou
     Student ID: 1308266
+
+    This class is the first window of the client App,
+    on top of showing up the link to different operations,
+    it firstly attempts to send an alive message to the server
+    to check if the server's availability and the validatiy of
+    parameters.
  */
 
 import Messages.FailureResponse;

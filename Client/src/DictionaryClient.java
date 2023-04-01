@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public class DictionaryClient {
-    private static final String USAGE = "Usage: java DictionaryClient <serverAddress> <serverPort>";
+    private static final String USAGE = "Usage: java DictionaryClient <serverAddress> <serverPort> <Open with GUI ? '0' for No, '1' for Yes>";
     public static final String ERROR_EMPTY_WORD = "Please enter a word.";
     public static final String ERROR_INVALID_WORD = "Word must not be empty and not have any spaces, please try again.";
     public static final String ERROR_EMPTY_MEANING = "Please enter at least one meaning.";
@@ -54,7 +54,7 @@ public class DictionaryClient {
         while(true)
         {
             System.out.println("Please enter the word: ");
-            String word = sc.nextLine().toLowerCase();
+            String word = sc.nextLine();
 
             if (checkWordValidity(word))
             {
@@ -69,6 +69,8 @@ public class DictionaryClient {
 
     public static Response checkServerValidity(boolean isGUI, String serverAddress, int serverPort)
     {
+        // Called on the start-up of the client, to check if the server availability and argument validity
+        // Tries to send an ALIVE_MESSAGE to the server, if the server is not alive, it will return a FailureResponse
         Request request = new Request(Operation.ALIVE_MESSAGE, null);
         return sendRequest(isGUI, request, serverAddress, serverPort);
     }
@@ -111,7 +113,8 @@ public class DictionaryClient {
             System.exit(1);
         }
         catch (IOException e) {
-            String err = "IO Exception encountered when connecting with the server: " + e.getMessage();
+            String err = "IO Exception encountered when connecting with the server: " + e.getMessage()
+                    + ".\n This may because the server is not up at the moment.";
 
             if (isGUI)
             {
@@ -130,13 +133,8 @@ public class DictionaryClient {
         return new FailureResponse(Operation.UNKNOWN, "Unknown error when sending request.");
     }
 
-    public static void main(String[] args){
-        if (args.length != 2) {
-            // Handle invalid number of arguments
-            System.out.println(USAGE);
-            System.exit(1);
-        }
-
+    private static void openWithCUI(String[] args)
+    {
         checkServerValidity(false, args[0], Integer.parseInt(args[1]));
 
         Scanner sc = new Scanner(System.in);
@@ -248,6 +246,28 @@ public class DictionaryClient {
             } else {
                 System.out.println("Operation cancelled.\n");
             }
+        }
+    }
+
+    public static void main(String[] args){
+        if (args.length != 3) {
+            // Handle invalid number of arguments
+            System.out.println(USAGE);
+            System.exit(1);
+        }
+
+        if (args[2].equals("0")) {
+            // Start the CUI
+            openWithCUI(args);
+        } else if (args[2].equals("1")) {
+            // Start the GUI
+            new ClientMainGUI(args[0], Integer.parseInt(args[1]));
+            System.out.println("GUI started.");
+        } else {
+            // Handle invalid argument
+            System.err.println("\nInvalid third argument: " + args[2] + ". The third argument must be either 0 or 1.");
+            System.err.println(USAGE);
+            System.exit(1);
         }
     }
 }

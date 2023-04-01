@@ -70,6 +70,8 @@ public class Dictionary {
     }
 
     public Response addAWord(String word, ArrayList<String> meanings) {
+        word = word.toLowerCase();
+
         if (dict.containsKey(word))
         {
             return new FailureResponse(Operation.ADD_WORD, Utils.ERROR_WORD_ALREADY_EXISTS);
@@ -84,6 +86,8 @@ public class Dictionary {
     }
 
     public Response queryAWord(String word) {
+        word = word.toLowerCase();
+
         if (dict.containsKey(word))
         {
             return new QueryResponse(Operation.QUERY_WORD, word, dict.get(word));
@@ -94,6 +98,8 @@ public class Dictionary {
     }
 
     public Response removeAWord(String word) {
+        word = word.toLowerCase();
+
         if (dict.containsKey(word))
         {
             dict.remove(word);
@@ -106,10 +112,18 @@ public class Dictionary {
     }
 
     public Response updateAWord(String word, ArrayList<String> newMeanings) {
+        word = word.toLowerCase();
+
         if (dict.containsKey(word))
         {
-            dict.put(word, newMeanings);
-            return new SuccessResponse(Operation.UPDATE_WORD);
+            if (newMeanings.size() == 0)
+            {
+                return new FailureResponse(Operation.UPDATE_WORD, Utils.ERROR_MEANINGS_EMPTY);
+            }
+            else {
+                dict.put(word, newMeanings);
+                return new SuccessResponse(Operation.UPDATE_WORD);
+            }
         }
         else
         {

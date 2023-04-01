@@ -321,8 +321,10 @@ public class ClientCRUDGUI extends JFrame {
             });
         } catch (BadLocationException e)
         {
-            JOptionPane.showMessageDialog(null, "Operation at an invalid position " +
+            JOptionPane.showMessageDialog(null, "[Internal Error] Operation at an invalid position " +
                     "when inserting text to the screen.", "Bad Location Exception", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "[Internal Error]: " + e.getMessage() + " when inserting text to the screen.", "Unknown Exception", JOptionPane.ERROR_MESSAGE);
         }
     }
 }
