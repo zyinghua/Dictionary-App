@@ -14,9 +14,9 @@ public class Request implements Serializable {
     private Operation op;
     private String word;
 
-    public Request()
+    public Request(Operation op)
     {
-        this.op = null;
+        this.op = op;
         this.word = null;
     }
 

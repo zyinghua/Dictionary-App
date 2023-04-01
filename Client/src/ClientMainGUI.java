@@ -3,7 +3,10 @@
     Student ID: 1308266
  */
 
+import Messages.FailureResponse;
+import Messages.Response;
 import Utils.Operation;
+import Utils.Result;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,11 +28,17 @@ public class ClientMainGUI extends JFrame{
     private static final String QUERY_BTN_TEXT = "Query a word";
     private static final String UPDATE_BTN_TEXT = "Update a word";
 
+    public String serverAddress;
+    public int serverPort;
+
     private JPanel panel;
     private JLabel headingLabel;
     private JButton addButton, removeButton, queryButton, updateButton;
 
-    public ClientMainGUI() {
+    public ClientMainGUI(String serverAddress, int serverPort) {
+        this.serverAddress = serverAddress;
+        this.serverPort = serverPort;
+
         setTitle(FRAME_TITLE);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(FRAME_WIDTH, FRAME_HEIGHT);
@@ -55,7 +64,7 @@ public class ClientMainGUI extends JFrame{
         this.queryButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new ClientCRUDGUI((JFrame)SwingUtilities.getWindowAncestor(queryButton), Operation.QUERY_WORD);
+                new ClientCRUDGUI((ClientMainGUI) SwingUtilities.getWindowAncestor(queryButton), Operation.QUERY_WORD);
                 setVisible(false);
             }
         });
@@ -68,7 +77,7 @@ public class ClientMainGUI extends JFrame{
         this.addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new ClientCRUDGUI((JFrame)SwingUtilities.getWindowAncestor(addButton), Operation.ADD_WORD);
+                new ClientCRUDGUI((ClientMainGUI)SwingUtilities.getWindowAncestor(addButton), Operation.ADD_WORD);
                 setVisible(false);
             }
         });
@@ -81,7 +90,7 @@ public class ClientMainGUI extends JFrame{
         this.updateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new ClientCRUDGUI((JFrame)SwingUtilities.getWindowAncestor(updateButton), Operation.UPDATE_WORD);
+                new ClientCRUDGUI((ClientMainGUI)SwingUtilities.getWindowAncestor(updateButton), Operation.UPDATE_WORD);
                 setVisible(false);
             }
         });
@@ -94,7 +103,7 @@ public class ClientMainGUI extends JFrame{
         this.removeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new ClientCRUDGUI((JFrame)SwingUtilities.getWindowAncestor(removeButton), Operation.REMOVE_WORD);
+                new ClientCRUDGUI((ClientMainGUI)SwingUtilities.getWindowAncestor(removeButton), Operation.REMOVE_WORD);
                 setVisible(false);
             }
         });
@@ -105,9 +114,21 @@ public class ClientMainGUI extends JFrame{
         setVisible(true);
         getContentPane().setBackground(new Color(253, 253, 253));
         requestFocusInWindow();
+        closeIfServerConnectionFailure(serverAddress, serverPort);
+    }
+
+    private void closeIfServerConnectionFailure(String serverAddress, int serverPort)
+    {
+        Response response = DictionaryClient.checkServerValidity(true, serverAddress, serverPort);
+
+        if (response.getStatus() == Result.FAILURE)
+        {
+            JOptionPane.showMessageDialog(this, ((FailureResponse)response).getMessage());
+            System.exit(1);
+        }
     }
 
     public static void main(String[] args) {
-        new ClientMainGUI();
+        new ClientMainGUI("localhost", 8888);
     }
 }

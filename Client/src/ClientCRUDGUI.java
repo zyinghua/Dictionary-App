@@ -3,7 +3,12 @@
     Student ID: 1308266
  */
 
+import Messages.AddUpdateRequest;
+import Messages.QueryResponse;
+import Messages.Request;
+import Messages.Response;
 import Utils.Operation;
+import Utils.Result;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -11,6 +16,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 
 public class ClientCRUDGUI extends JFrame {
     private static final String PROMPT_WORD = "Please enter the word: ";
@@ -18,12 +27,20 @@ public class ClientCRUDGUI extends JFrame {
     private static final String PROMPT_ADDITIONAL_MEANINGS = "[Optional] Please enter another meaning of the word: ";
     private final HintTextField inputField;
     private final JButton addMeaningButton;
-
+    private final JTextPane textPane;
+    private StyledDocument textPaneDoc;
+    Request request;
     private int state = 0;  // 0 = word not entered, 1 = word entered, 2+ = respective number - 1 of meanings entered
-    public ClientCRUDGUI(JFrame previousFrame, Operation op) {
+    private Style redText, blackText, blueText;
+    private static final int USER_INPUT = 0;
+    private static final int SERVER_VALID_RESPONSE = 1;
+    private static final int SERVER_ERROR_RESPONSE = 2;
+    public ClientCRUDGUI(ClientMainGUI previousFrame, Operation op) {
         super(ClientMainGUI.FRAME_TITLE);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(ClientMainGUI.FRAME_WIDTH, ClientMainGUI.FRAME_HEIGHT);
+
+        initialiseRequest(op);
 
         JPanel panel = new JPanel(new BorderLayout());  // Main panel
 
@@ -44,10 +61,19 @@ public class ClientCRUDGUI extends JFrame {
 
         // Create the middle section
         JPanel midPanel = new JPanel(new BorderLayout());
-        JTextArea textArea = new JTextArea();
-        textArea.setEditable(false);
-        textArea.setLineWrap(true);
-        midPanel.add(textArea, BorderLayout.CENTER);
+        this.textPane = new JTextPane();
+        this.textPane.setEditable(false);
+
+        this.textPaneDoc = this.textPane.getStyledDocument();
+        // Create a style for each color
+        this.redText = this.textPaneDoc.addStyle("red", null);
+        StyleConstants.setForeground(this.redText, Color.RED);
+        this.blackText = this.textPaneDoc.addStyle("black", null);
+        StyleConstants.setForeground(this.blackText, Color.BLACK);
+        this.blueText = this.textPaneDoc.addStyle("blue", null);
+        StyleConstants.setForeground(this.blueText, Color.BLUE);
+
+        midPanel.add(this.textPane, BorderLayout.CENTER);
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.add(midPanel);
 
@@ -61,15 +87,14 @@ public class ClientCRUDGUI extends JFrame {
         this.addMeaningButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (inputField.getText().equals(PROMPT_MEANINGS) || inputField.getText().equals(""))
+                if (inputField.getForeground() == Color.gray || inputField.getText().equals(""))
                 {
                     JOptionPane.showMessageDialog(null, "Please enter the meaning.", "Empty Meaning", JOptionPane.ERROR_MESSAGE);
                 }
                 else
                 {
-                    textArea.append("Meaning " + state + ": " + inputField.getText() + "\n");
+                    appendTextToTextPane(USER_INPUT, "Meaning " + state + ": " + inputField.getText() + "\n");
                     resetJTextFieldPrompt(++state);
-                    inputField.resetHint(PROMPT_ADDITIONAL_MEANINGS);
                 }
             }
         });
@@ -86,24 +111,28 @@ public class ClientCRUDGUI extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 if (state == 0)
                 {
+                    // Check if the word is valid
                     if (DictionaryClient.checkWordValidity(inputField.getText()))
                     {
-                        textArea.append("Word: " + inputField.getText() + "\n");
+                        String word = inputField.getText();
+                        appendTextToTextPane(USER_INPUT, "Word: " + word + "\n");
+                        request.setWord(word);
 
                         if(op == Operation.ADD_WORD || op == Operation.UPDATE_WORD)
                         {
                             resetJTextFieldPrompt(++state);
                             addMeaningButton.setVisible(true);
                             confirmButton.setText("Confirm");
-                            inputField.resetHint(PROMPT_MEANINGS);
                         }
                         else
                         {
                             // Ready to send request
-
+                            resetStateAndJTextFieldPrompt();
+                            Response response = DictionaryClient.sendRequest(true, request, previousFrame.serverAddress, previousFrame.serverPort);
+                            handleResponse(response);
                         }
                     }
-                    else if(inputField.getText().equals(PROMPT_WORD) || inputField.getText().equals(""))
+                    else if(inputField.getForeground() == Color.gray || inputField.getText().equals(""))
                     {
                         JOptionPane.showMessageDialog(null, DictionaryClient.ERROR_EMPTY_WORD, "Empty Word", JOptionPane.ERROR_MESSAGE);
                     }
@@ -114,20 +143,31 @@ public class ClientCRUDGUI extends JFrame {
                 }
                 else if(state == 1)
                 {
-                    if(inputField.getText().equals(PROMPT_MEANINGS) || inputField.getText().equals(""))
+                    if(inputField.getForeground() == Color.gray || inputField.getText().equals(""))
                     {
                         JOptionPane.showMessageDialog(null, DictionaryClient.ERROR_EMPTY_MEANING, "Empty Meaning", JOptionPane.ERROR_MESSAGE);
                     }
                     else
                     {
                         // Ready to send request
-                        textArea.append("Meaning: " + inputField.getText() + "\n");
+                        appendTextToTextPane(USER_INPUT, "Meaning: " + inputField.getText() + "\n");
+                        resetStateAndJTextFieldPrompt();
                     }
                 }
                 else
                 {
                     // Ready to send request
-                    textArea.append("Meaning " + state + ": " + inputField.getText() + "\n");
+
+                    if(inputField.getForeground() == Color.gray || inputField.getText().equals(""))
+                    {
+
+                    }
+                    else
+                    {
+                        // If another meaning available in the text field, add it to the request
+                        appendTextToTextPane(USER_INPUT, "Meaning " + state + ": " + inputField.getText() + "\n");
+                        resetStateAndJTextFieldPrompt();
+                    }
 
                 }
 
@@ -188,18 +228,13 @@ public class ClientCRUDGUI extends JFrame {
     }
 
     private String getOperationHint(Operation op) {
-        switch (op) {
-            case ADD_WORD:
-                return "Add a new word: ";
-            case REMOVE_WORD:
-                return "Remove a word: ";
-            case QUERY_WORD:
-                return "Query a word: ";
-            case UPDATE_WORD:
-                return "Update a word: ";
-            default:
-                return "Unknown operation ";
-        }
+        return switch (op) {
+            case ADD_WORD -> "Add a new word: ";
+            case REMOVE_WORD -> "Remove a word: ";
+            case QUERY_WORD -> "Query a word: ";
+            case UPDATE_WORD -> "Update a word: ";
+            default -> "Unknown operation ";
+        };
     }
 
     public void resetJTextFieldPrompt(int state)
@@ -207,17 +242,75 @@ public class ClientCRUDGUI extends JFrame {
         if (state == 0)
         {
             // Reset the prompt
-            this.inputField.setText(PROMPT_WORD);
+            this.inputField.resetHint(PROMPT_WORD);
         }
         else if (state == 1)
         {
             // Reset the prompt
-            this.inputField.setText(PROMPT_MEANINGS);
+            this.inputField.resetHint(PROMPT_MEANINGS);
         }
         else if (state == 2)
         {
             // Reset the prompt
-            this.inputField.setText(PROMPT_ADDITIONAL_MEANINGS);
+            this.inputField.resetHint(PROMPT_ADDITIONAL_MEANINGS);
+        }
+    }
+
+    public void resetStateAndJTextFieldPrompt()
+    {
+        this.state = 0;
+        resetJTextFieldPrompt(this.state);
+    }
+
+    private void initialiseRequest(Operation op)
+    {
+        if (op == Operation.ADD_WORD || op == Operation.UPDATE_WORD)
+        {
+            this.request = new AddUpdateRequest(op);
+        }
+        else
+        {
+            this.request = new Request(op);
+        }
+    }
+
+    private void handleResponse(Response response)
+    {
+        if (response.getStatus() == Result.SUCCESS)
+        {
+            if (response instanceof QueryResponse)
+            {
+                QueryResponse queryResponse = (QueryResponse) response;
+                appendTextToTextPane(SERVER_VALID_RESPONSE, "The meanings of the word are: ");
+                for (int i = 0; i < queryResponse.getMeanings().size(); i++)
+                {
+                    appendTextToTextPane(SERVER_VALID_RESPONSE, "\nMeaning " + (i + 1) + ": " + queryResponse.getMeanings().get(i));
+                }
+                appendTextToTextPane(SERVER_VALID_RESPONSE, "\n\n");
+            } else {
+                appendTextToTextPane(SERVER_VALID_RESPONSE, response + "\n\n");
+            }
+        }
+        else
+        {
+            appendTextToTextPane(SERVER_ERROR_RESPONSE, response + "\n\n");
+        }
+    }
+
+    private void appendTextToTextPane(int property, String text)
+    {
+        try
+        {
+            this.textPaneDoc.insertString(this.textPaneDoc.getLength(), text, switch (property) {
+                case USER_INPUT -> this.blueText; // User input
+                case SERVER_VALID_RESPONSE -> this.blackText; // Server valid response
+                case SERVER_ERROR_RESPONSE -> this.redText; // Server error response
+                default -> null;
+            });
+        } catch (BadLocationException e)
+        {
+            JOptionPane.showMessageDialog(null, "Operation at an invalid position " +
+                    "when inserting text to the screen.", "Bad Location Exception", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

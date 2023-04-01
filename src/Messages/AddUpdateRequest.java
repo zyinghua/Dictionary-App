@@ -13,6 +13,13 @@ public class AddUpdateRequest extends Request{
     private String word;
     private ArrayList<String> meanings;
 
+    public AddUpdateRequest(Operation op)
+    {
+        super(op);
+        this.word = null;
+        this.meanings = null;
+    }
+
     public AddUpdateRequest(Operation op, String word, ArrayList<String> meanings) {
         super(op, word);
         this.word = word;

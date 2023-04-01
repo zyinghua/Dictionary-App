@@ -67,13 +67,13 @@ public class DictionaryClient {
         }
     }
 
-    public static void checkServerValidity(String serverAddress, int serverPort)
+    public static Response checkServerValidity(boolean isGUI, String serverAddress, int serverPort)
     {
         Request request = new Request(Operation.ALIVE_MESSAGE, null);
-        sendRequest(request, serverAddress, serverPort);
+        return sendRequest(isGUI, request, serverAddress, serverPort);
     }
 
-    public static Response sendRequest(Request request, String serverAddress, int serverPort)
+    public static Response sendRequest(boolean isGUI, Request request, String serverAddress, int serverPort)
     {
         // Responsible for sending the request to the server and returning the response, all exceptions caught here
         try
@@ -100,18 +100,29 @@ public class DictionaryClient {
             return new FailureResponse(Operation.UNKNOWN, err);
         }
         catch (NumberFormatException e) {
+            // Exception happening on Command Line start-up
             System.out.println(USAGE);
             System.err.println(e.getMessage() + "\nPort must be an integer.");
             System.exit(1);
         } catch (UnknownHostException e) {
+            // Exception happening on Command Line start-up
             System.out.println(USAGE);
             System.err.println("Cannot find the specified host. Please check host name: " + e.getMessage());
             System.exit(1);
         }
         catch (IOException e) {
-            System.err.println("IO Exception encountered when connecting with the server: " + e.getMessage());
-            System.exit(1);
+            String err = "IO Exception encountered when connecting with the server: " + e.getMessage();
+
+            if (isGUI)
+            {
+                return new FailureResponse(Operation.UNKNOWN, err);
+            }
+            else {
+                System.err.println(err);
+                System.exit(1);
+            }
         } catch (IllegalArgumentException e) {
+            // Exception happening on Command Line start-up
             System.err.println(e.getMessage() + "\nPort must be between 0 and 65535");
             System.exit(1);
         }
@@ -126,7 +137,7 @@ public class DictionaryClient {
             System.exit(1);
         }
 
-        checkServerValidity(args[0], Integer.parseInt(args[1]));
+        checkServerValidity(false, args[0], Integer.parseInt(args[1]));
 
         Scanner sc = new Scanner(System.in);
         boolean done = false;
@@ -213,7 +224,7 @@ public class DictionaryClient {
 
             if (!done && request != null && request.getOp() != Operation.CANCELLED) {
 
-                Response response = sendRequest(request, args[0], Integer.parseInt(args[1]));
+                Response response = sendRequest(false, request, args[0], Integer.parseInt(args[1]));
 
                 if (response instanceof QueryResponse)
                 {
