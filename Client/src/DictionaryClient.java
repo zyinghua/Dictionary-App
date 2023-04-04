@@ -227,11 +227,13 @@ public class DictionaryClient {
                 if (response instanceof QueryResponse)
                 {
                     QueryResponse queryResponse = (QueryResponse) response;
-                    System.out.println("\nThe meanings of the word are: ");
-                    for (String meaning : queryResponse.getMeanings())
+                    System.out.println("\n------------------------------");
+                    System.out.println("The meanings of the word '" + queryResponse.getWord() + "' are: ");
+                    for (int i = 0; i < queryResponse.getMeanings().size(); i++)
                     {
-                        System.out.println(meaning);
+                        System.out.println(i + ": " + queryResponse.getMeanings().get(i));
                     }
+                    System.out.println("------------------------------");
                     System.out.println("\n");
                 }
                 else
