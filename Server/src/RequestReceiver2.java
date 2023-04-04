@@ -8,16 +8,18 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 
-public class RequestReceiver extends Thread{
+public class RequestReceiver2 extends Thread{
     private volatile boolean isRunning;
     private ServerSocket serverSocket;
+    private WorkerPoolManager2 workerPoolManager;
     private Dictionary dict;
 
-    public RequestReceiver(ServerSocket serverSocket, Dictionary dict,
+    public RequestReceiver2(ServerSocket serverSocket, Dictionary dict,
                             int corePoolSize, int maxPoolSize, long keepAliveTime, int queueCapacity)
     {
         this.serverSocket = serverSocket;
         this.dict = dict;
+        this.workerPoolManager = new WorkerPoolManager2(corePoolSize, maxPoolSize, keepAliveTime, queueCapacity);
         this.isRunning = true;
     }
 
@@ -52,6 +54,6 @@ public class RequestReceiver extends Thread{
     public synchronized void terminate()
     {
         this.isRunning = false;
-
+        this.workerPoolManager.terminate();
     }
 }

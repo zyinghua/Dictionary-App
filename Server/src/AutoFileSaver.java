@@ -4,13 +4,11 @@
  */
 
 public class AutoFileSaver extends Thread{
-    private final String fileName;
     private final Dictionary dict;
-    private boolean shutdown;
+    private volatile boolean shutdown;
 
-    public AutoFileSaver(String fileName, Dictionary dict)
+    public AutoFileSaver(Dictionary dict)
     {
-        this.fileName = fileName;
         this.dict = dict;
         this.shutdown = false;
     }
@@ -34,7 +32,7 @@ public class AutoFileSaver extends Thread{
         System.out.println("[Auto File Saver] Finished.");
     }
 
-    public void terminate()
+    public synchronized void terminate()
     {
         this.shutdown = true;
     }

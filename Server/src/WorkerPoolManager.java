@@ -3,60 +3,66 @@
     Student ID: 1308266
  */
 
-import java.util.concurrent.*;
+import Messages.FailureResponse;
+import Utils.Operation;
+
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 public class WorkerPoolManager {
-    private static final int timeout = 5000;
+    private final BlockingQueue<Socket> clientQueue;
+    private final WorkerThread[] workerThreads;
     private final int corePoolSize;
     private final int maxPoolSize;
     private final long keepAliveTime;
     private final int queueCapacity;
-    private ThreadPoolExecutor threadPoolExecutor;
-    public WorkerPoolManager(int corePoolSize, int maxPoolSize, long keepAliveTime, int queueCapacity) {
+    private final Dictionary dict;
+    public WorkerPoolManager(int corePoolSize, int maxPoolSize, long keepAliveTime, int queueCapacity, Dictionary dict) {
         this.corePoolSize = corePoolSize;
         this.maxPoolSize = maxPoolSize;
         this.keepAliveTime = keepAliveTime;
         this.queueCapacity = queueCapacity;
-
+        this.dict = dict;
+        this.clientQueue = new ArrayBlockingQueue<>(queueCapacity);
+        this.workerThreads = new WorkerThread[corePoolSize];
         this.initialise();
     }
 
-    private void initialise()
+    public void initialise()
     {
-        BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(queueCapacity);
-        this.threadPoolExecutor = new ThreadPoolExecutor(corePoolSize, maxPoolSize, keepAliveTime,
-                java.util.concurrent.TimeUnit.SECONDS, queue);
-        System.out.println("[Worker Pool Manager] Initialised with corePoolSize: " + corePoolSize + ", maxPoolSize: " + maxPoolSize + ", keepAliveTime: " + keepAliveTime + ", queueCapacity: " + queueCapacity);
-    }
-
-    public void executeTask(Runnable task)
-    {
-        try {
-            this.threadPoolExecutor.execute(task);
-        } catch (RejectedExecutionException e) {
-            System.err.println("[Worker Pool Manager] Rejected Execution (Task from client: "
-                    + ((Task) task).getClientConn().getInetAddress() + ").\n Exception: " + e.getMessage());
-
-            // send a failure response to the client
-            new RejectedRequestHandler(((Task) task).getClientConn()).start();
-
-        } catch (NullPointerException e) {
-            System.err.println("[Worker Pool Manager] Null Pointer Exception: " + e.getMessage() + ", Cause: " + e.getCause());
+        for(int i = 0; i < corePoolSize; i++)
+        {
+            workerThreads[i] = new WorkerThread(i, this.clientQueue, this.dict);
+            workerThreads[i].start();
         }
-        catch (Exception e) {
-            System.err.println("[Worker Pool Manager] Exception: " + e.getMessage());
-        }
-    }
 
-    public void terminate()
-    {
-        this.threadPoolExecutor.shutdown();
-        try {
-            if (!this.threadPoolExecutor.awaitTermination(timeout, TimeUnit.SECONDS)) { // block until all tasks are completed or timeout is reached
-                this.threadPoolExecutor.shutdownNow(); // forcefully shut down if timeout is reached
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            // Interrupt any running worker threads
+            for (WorkerThread workerThread : workerThreads) {
+                if (workerThread.isAlive()) {
+                    workerThread.interrupt();
+                }
             }
-        } catch (InterruptedException ex) {
-            this.threadPoolExecutor.shutdownNow(); // forcefully shut down if interrupted
-        }
+
+            // Close any connections in the blocking queue
+            while (!clientQueue.isEmpty()) {
+                Socket clientConn = clientQueue.poll();
+                try {
+                    ObjectOutputStream oos = new ObjectOutputStream(clientConn.getOutputStream());
+
+                    oos.writeObject(new FailureResponse(Operation.UNKNOWN, "Server is shutting down."));
+                    oos.flush();
+
+                    oos.close();
+                    clientConn.close();
+                    clientConn.close();
+                } catch (IOException e) {
+                    System.err.println("Error closing socket: " + e.getMessage());
+                }
+            }
+        }));
     }
 }
