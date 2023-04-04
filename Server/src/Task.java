@@ -55,7 +55,7 @@ public class Task implements Runnable {
             clientConn.close();
         } catch (EOFException e)
         {
-            System.err.println("Connection unexpectedly ended by client " + clientConn.getInetAddress());
+            System.err.println("Connection unexpectedly ended by client " + clientConn.getInetAddress() + "\n" + e.getMessage());
         }
         catch (IOException | ClassNotFoundException e) {
             System.err.println("Error on processing request: " +  e.getMessage());

@@ -57,7 +57,7 @@ public class ClientCRUDGUI extends JFrame {
                     previousFrame.preservedRequestHistory = textPaneDoc.getText(0, textPaneDoc.getLength());
                 } catch (BadLocationException ex) {
                     JOptionPane.showMessageDialog(null, "[Internal Error] Operation at an invalid position " +
-                            "when saving text from the screen.", "Bad Location Exception", JOptionPane.ERROR_MESSAGE);
+                            "when saving text from the screen. " + ex.getMessage(), "Bad Location Exception", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -88,7 +88,7 @@ public class ClientCRUDGUI extends JFrame {
             this.textPaneDoc.insertString(0, previousFrame.preservedRequestHistory, greyText);
         } catch (BadLocationException e) {
             JOptionPane.showMessageDialog(null, "[Internal Error] Operation at an invalid position " +
-                    "when loading history request text to the screen.", "Bad Location Exception", JOptionPane.ERROR_MESSAGE);
+                    "when loading history request text to the screen. " + e.getMessage(), "Bad Location Exception", JOptionPane.ERROR_MESSAGE);
         }
 
         midPanel.add(this.textPane, BorderLayout.CENTER);
@@ -337,7 +337,7 @@ public class ClientCRUDGUI extends JFrame {
         } catch (BadLocationException e)
         {
             JOptionPane.showMessageDialog(null, "[Internal Error] Operation at an invalid position " +
-                    "when inserting text to the screen.", "Bad Location Exception", JOptionPane.ERROR_MESSAGE);
+                    "when inserting text to the screen. "  + e.getMessage(), "Bad Location Exception", JOptionPane.ERROR_MESSAGE);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "[Internal Error]: " + e.getMessage() + " when inserting text to the screen.", "Unknown Exception", JOptionPane.ERROR_MESSAGE);
         }

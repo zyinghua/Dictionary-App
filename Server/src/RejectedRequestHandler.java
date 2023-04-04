@@ -29,7 +29,7 @@ public class RejectedRequestHandler extends Thread{
             clientConn.close();
         } catch (EOFException e)
         {
-            System.out.println("[Rejected Request Handler] Connection illegally ended by client " + clientConn.getInetAddress());
+            System.out.println("[Rejected Request Handler] Connection illegally ended by client " + clientConn.getInetAddress() + "\n" + e.getMessage());
         }
         catch (IOException e) {
             System.err.println("[Rejected Request Handler] Error: " + e.getMessage());

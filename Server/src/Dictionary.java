@@ -39,7 +39,7 @@ public class Dictionary {
             dict = this.objectMapper.readValue(new File(this.fileName), typeRef);
 
         } catch (FileNotFoundException e) {
-            System.err.println(e + "\nPlease specify a valid file name. " +
+            System.err.println(e.getMessage() + "\nPlease specify a valid file name. " +
                     "Or leave the file name empty for a default file.");
             System.exit(1);
         }
@@ -56,7 +56,7 @@ public class Dictionary {
         try{
             this.objectMapper.writeValue(new File(this.fileName), dict);
         } catch (FileNotFoundException e) {
-            System.err.println(e + "\nPlease make sure the relevant file: " + this.fileName + " is not deleted.");
+            System.err.println(e.getMessage() + "\nPlease make sure the relevant file: " + this.fileName + " is not deleted.");
             System.exit(1);
         } catch (IOException e)
         {

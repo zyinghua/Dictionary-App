@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public class DictionaryClient {
-    private static final String USAGE = "Usage: java DictionaryClient <serverAddress> <serverPort> <Open with GUI ? '0' for No, '1' for Yes>";
+    private static final String USAGE = "Usage: java -jar Client.jar <serverAddress> <serverPort> <Open with GUI? '0' for No, '1' for Yes>";
     public static final String ERROR_EMPTY_WORD = "Please enter a word.";
     public static final String ERROR_INVALID_WORD = "Word must not be empty and not have any spaces, please try again.";
     public static final String ERROR_EMPTY_MEANING = "Please enter at least one meaning.";
@@ -104,7 +104,7 @@ public class DictionaryClient {
         catch (NumberFormatException e) {
             // Exception happening on Command Line start-up
             System.out.println(USAGE);
-            System.err.println(e.getMessage() + "\nPort must be an integer.");
+            System.err.println(e.getMessage() + "\nPort must be an integer.\n" + e.getMessage());
             System.exit(1);
         } catch (UnknownHostException e) {
             // Exception happening on Command Line start-up
@@ -126,7 +126,7 @@ public class DictionaryClient {
             }
         } catch (IllegalArgumentException e) {
             // Exception happening on Command Line start-up
-            System.err.println(e.getMessage() + "\nPort must be between 0 and 65535");
+            System.err.println(e.getMessage() + "\nPort must be between 0 and 65535.");
             System.exit(1);
         }
 

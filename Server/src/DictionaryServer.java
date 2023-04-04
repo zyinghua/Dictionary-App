@@ -8,7 +8,7 @@ import java.net.ServerSocket;
 import java.util.Scanner;
 
 public class DictionaryServer {
-    public static final String USAGE = "Usage: java -jar DictionaryServer.jar <port> <dictionary-file>[optional]";
+    public static final String USAGE = "Usage: java -jar Server.jar <port> <dictionary-file>[optional]";
     private static final String defaultFileName = "dictionary_data.json"; // Used when no default file is provided
     private static final int corePoolSize = 20;
     private static final int maximumPoolSize = 40;
@@ -64,14 +64,14 @@ public class DictionaryServer {
 
         } catch (NumberFormatException e) {
             System.out.println(USAGE);
-            System.err.println("Port must be an integer.");
+            System.err.println("Port must be an integer.\n" + e.getMessage());
             System.exit(1);
         }
         catch (IOException e) {
-            System.err.println("IO Exception encountered on starting up the server.");
+            System.err.println("IO Exception encountered on starting up the server.\n" + e.getMessage());
             System.exit(1);
         } catch (IllegalArgumentException e) {
-            System.err.println("Port must be between 0 and 65535");
+            System.err.println("Port must be between 0 and 65535.\n" + e.getMessage());
             System.exit(1);
         }
     }
