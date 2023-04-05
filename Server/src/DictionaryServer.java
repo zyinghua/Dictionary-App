@@ -155,13 +155,13 @@ public class DictionaryServer {
             System.err.println("[Server failed to start] Port must be an integer.\n" + e.getMessage());
             System.exit(1);
         } catch (IOException e) {
-            System.err.println("[Server failed to start] IO Exception encountered on starting up the server.\n" + e.getMessage());
+            System.err.println("[Server] IO Exception encountered on the server.\n" + e.getMessage());
             System.exit(1);
         } catch (IllegalArgumentException e) {
             System.err.println("[Server failed to start] Port must be between 0 and 65535.\n" + e.getMessage());
             System.exit(1);
         } catch (Exception e) {
-            System.err.println("[Server failed to start] Exception encountered on the server: " + e.getMessage());
+            System.err.println("[Server] Exception encountered on the server: " + e.getMessage());
             System.exit(1);
         }
     }
