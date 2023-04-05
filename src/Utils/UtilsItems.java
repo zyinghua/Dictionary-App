@@ -5,9 +5,9 @@
 
 package Utils;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import Messages.Request;
 
-public class UtilsMsg {
+public class UtilsItems {
     public static final int VERBOSE_OFF = 0;
     public static final int VERBOSE_ON_LOW = 1;
     public static final int VERBOSE_ON_HIGH = 2;

@@ -47,7 +47,7 @@ public class DictionaryClient {
 
     public static boolean checkWordValidity(String word)
     {
-        return !word.isEmpty() && word.matches(UtilsMsg.WORD_REGEX);
+        return !word.isEmpty() && word.matches(UtilsItems.WORD_REGEX);
     }
 
     private static String promptWord(Scanner sc)

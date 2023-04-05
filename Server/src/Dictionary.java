@@ -78,10 +78,10 @@ public class Dictionary {
 
         if (dict.containsKey(word))
         {
-            return new FailureResponse(Operation.ADD_WORD, UtilsMsg.ERROR_WORD_ALREADY_EXISTS);
+            return new FailureResponse(Operation.ADD_WORD, UtilsItems.ERROR_WORD_ALREADY_EXISTS);
         } else if (meanings.size() == 0)
         {
-            return new FailureResponse(Operation.ADD_WORD, UtilsMsg.ERROR_MEANINGS_EMPTY);
+            return new FailureResponse(Operation.ADD_WORD, UtilsItems.ERROR_MEANINGS_EMPTY);
         } else
         {
             dict.put(word, meanings);
@@ -97,7 +97,7 @@ public class Dictionary {
             return new QueryResponse(Operation.QUERY_WORD, word, dict.get(word));
         } else
         {
-            return new FailureResponse(Operation.QUERY_WORD, UtilsMsg.ERROR_WORD_NOT_FOUND);
+            return new FailureResponse(Operation.QUERY_WORD, UtilsItems.ERROR_WORD_NOT_FOUND);
         }
     }
 
@@ -111,7 +111,7 @@ public class Dictionary {
         }
         else
         {
-            return new FailureResponse(Operation.REMOVE_WORD, UtilsMsg.ERROR_WORD_NOT_FOUND);
+            return new FailureResponse(Operation.REMOVE_WORD, UtilsItems.ERROR_WORD_NOT_FOUND);
         }
     }
 
@@ -122,7 +122,7 @@ public class Dictionary {
         {
             if (newMeanings.size() == 0)
             {
-                return new FailureResponse(Operation.UPDATE_WORD, UtilsMsg.ERROR_MEANINGS_EMPTY);
+                return new FailureResponse(Operation.UPDATE_WORD, UtilsItems.ERROR_MEANINGS_EMPTY);
             }
             else {
                 dict.put(word, newMeanings);
@@ -131,7 +131,7 @@ public class Dictionary {
         }
         else
         {
-            return new FailureResponse(Operation.UPDATE_WORD, UtilsMsg.ERROR_WORD_NOT_FOUND);
+            return new FailureResponse(Operation.UPDATE_WORD, UtilsItems.ERROR_WORD_NOT_FOUND);
         }
     }
 }

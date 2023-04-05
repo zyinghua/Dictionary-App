@@ -5,7 +5,7 @@
 
 import Messages.*;
 import Utils.Operation;
-import Utils.UtilsMsg;
+import Utils.UtilsItems;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -94,7 +94,7 @@ public class WorkerThread extends Thread{
                     clientConn.close();
                     numRequestsProcessed.incrementAndGet();
 
-                    if (verbose.get() >= UtilsMsg.VERBOSE_ON_LOW)
+                    if (verbose.get() >= UtilsItems.VERBOSE_ON_LOW)
                         System.out.println("[Worker thread " + this.tid + "] processed a request from "
                                 + clientConn.getInetAddress() + ".\n" + request.toString() + "\nTotal Requests Processed Since Server Start-Up: " + numRequestsProcessed.get());
                 }
@@ -105,7 +105,7 @@ public class WorkerThread extends Thread{
                     if(this.additionalWorkerThreadList != null)
                         this.additionalWorkerThreadList.remove(this.getTid());
 
-                    if(this.verbose.get() >= UtilsMsg.VERBOSE_ON_LOW)
+                    if(this.verbose.get() >= UtilsItems.VERBOSE_ON_LOW)
                         System.out.println("[Additional Worker thread " + this.tid + "] terminated, due to being idle for " + this.keepAliveTimeSec + " seconds.");
                 }
 

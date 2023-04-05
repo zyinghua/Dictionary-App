@@ -3,7 +3,7 @@
     Student ID: 1308266
  */
 
-import Utils.UtilsMsg;
+import Utils.UtilsItems;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -36,7 +36,7 @@ public class AutoFileSaver extends Thread{
 
             this.dict.writeDictDataToFile();
 
-            if(verbose.get() == UtilsMsg.VERBOSE_ON_HIGH)
+            if(verbose.get() == UtilsItems.VERBOSE_ON_HIGH)
                 System.out.println("[Auto File Saver] Dictionary saved to file. Time: " + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + ".");
         }
 

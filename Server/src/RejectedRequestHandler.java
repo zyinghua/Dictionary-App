@@ -3,7 +3,6 @@
     Student ID: 1308266
  */
 
-import Messages.FailureResponse;
 import Messages.UnprocessedResponse;
 import Utils.*;
 
@@ -23,7 +22,7 @@ public class RejectedRequestHandler extends Thread{
     public void run() {
         try {
             ObjectOutputStream oos = new ObjectOutputStream(clientConn.getOutputStream());
-            oos.writeObject(new UnprocessedResponse(UtilsMsg.SERVER_OVERLOAD_REJECT_MSG));
+            oos.writeObject(new UnprocessedResponse(UtilsItems.SERVER_OVERLOAD_REJECT_MSG));
             oos.flush();
 
             oos.close();

@@ -3,7 +3,7 @@
     Student ID: 1308266
  */
 
-import Utils.UtilsMsg;
+import Utils.UtilsItems;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -124,7 +124,7 @@ public class DictionaryServer {
 
             String fileName = args.length == 2 ? args[1] : defaultFileName;
 
-            AtomicInteger verbose = new AtomicInteger(UtilsMsg.VERBOSE_OFF);
+            AtomicInteger verbose = new AtomicInteger(UtilsItems.VERBOSE_OFF);
             Dictionary dict = new Dictionary(args.length == 2, fileName);
             AutoFileSaver autoFileSaver = new AutoFileSaver(dict, verbose);
             autoFileSaver.start();
