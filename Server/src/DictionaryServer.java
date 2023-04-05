@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.util.Scanner;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DictionaryServer {
     public static final String USAGE = "Usage: java -jar Server.jar <port> <dictionary-file>[optional]";
@@ -17,12 +18,13 @@ public class DictionaryServer {
     private static final int maximumPoolSize = 40;
     private static final int keepAliveTimeSec = 30;
     private static final int queueCapacity = 100;
-    private static volatile boolean shouldTerminate = false;
 
     private static class CUIPrompt extends Thread {
-        private final Dictionary dict;
-        public CUIPrompt(Dictionary dict) {
-            this.dict = dict;
+        private final WorkerPoolManager workerPoolManager;
+        private volatile AtomicBoolean shouldTerminate;
+        public CUIPrompt(WorkerPoolManager workerPoolManager, AtomicBoolean shouldTerminate) {
+            this.workerPoolManager = workerPoolManager;
+            this.shouldTerminate = shouldTerminate;
         }
 
         @Override
@@ -35,22 +37,53 @@ public class DictionaryServer {
                 command = scanner.nextLine().toLowerCase();
 
                 switch (command) {
-                    case "quit" -> System.out.println("Server stopping...");
-                    case "save" -> {
-                        dict.writeDictDataToFile();
-                        System.out.println("Dictionary saved to file.");
+                    case "quit" -> {
+                        System.out.println("\n--------------------------");
+                        System.out.println("Server is shutting down...");
+                        System.out.println("--------------------------\n");
                     }
-                    case "check dictionary" -> System.out.println(dict.getDict().toString());
+                    case "save" -> {
+                        workerPoolManager.getDict().writeDictDataToFile();
+                        System.out.println("\n-------------------------");
+                        System.out.println("Dictionary saved to file.");
+                        System.out.println("-------------------------\n");
+                    }
+                    case "check dictionary" -> {
+                        System.out.println("\n------------------------------");
+                        System.out.println(workerPoolManager.getDict().toString());
+                        System.out.println("------------------------------\n");
+                    }
+                    case "check requests" -> {
+                        System.out.println("\n---------------------------------");
+                        System.out.println("Number of requests processed: " + workerPoolManager.getNumRequestsProcessed().get());
+                        System.out.println("---------------------------------\n");
+                    }
+                    case "check threads" -> {
+                        System.out.println("\n---------------------------------");
+                        System.out.println("Number of worker threads: " + (corePoolSize + workerPoolManager.getAdditionalWorkerThreadList().size()));
+                        System.out.println("---------------------------------\n");
+                    }
+
                     case "help" -> System.out.println("""
+                            
+                            ------------------VALID COMMANDS--------------------
                             Type 'quit' to stop the server.
                             Type 'save' to save the dictionary data into file.
                             Type 'check dictionary' to check the dictionary data.
+                            Type 'check requests' to check the number of requests processed.
+                            Type 'check threads' to check the number of current worker threads.
+                            ----------------------------------------------------
+                            
                             """);
-                    default -> System.out.println("Invalid command.");
+                    default -> {
+                        System.out.println("\n****************");
+                        System.out.println("Invalid command.");
+                        System.out.println("****************\n");
+                    }
                 }
             }
 
-            shouldTerminate = true;
+            shouldTerminate.set(true);
         }
     }
 
@@ -83,9 +116,10 @@ public class DictionaryServer {
             }));
 
             System.out.println("\nServer started successfully. Listening on port " + args[0] + " for incoming connections...");
-            new CUIPrompt(dict).start();
+            AtomicBoolean shouldTerminate = new AtomicBoolean(false);
+            new CUIPrompt(workerPoolManager, shouldTerminate).start();
 
-            while (!shouldTerminate) {
+            while (!shouldTerminate.get()) {
             }
 
             autoFileSaver.terminate();

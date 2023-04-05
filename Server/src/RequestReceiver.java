@@ -30,14 +30,11 @@ public class RequestReceiver extends Thread{
         {
             try {
                 Socket clientConn = serverSocket.accept(); // wait and accept a connection
-                System.out.println("Received a client request from: " + clientConn.getInetAddress());
+                //System.out.println("Received a client request from: " + clientConn.getInetAddress());
 
                 workerPoolManager.addClient(clientConn);
             } catch (SocketException e) {
-                if (e.getMessage().equals("Socket closed")) {
-                    // server socket is closed, this thread was called to terminate
-                    System.out.println("[Request Receiver] Server closed.");
-                } else {
+                if (!e.getMessage().equals("Socket closed")) { // Otherwise it is a normal socket close called as part of the termination process
                     System.out.println("[Request Receiver] Socket Exception: " + e.getMessage());
                 }
             }

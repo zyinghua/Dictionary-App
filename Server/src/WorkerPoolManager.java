@@ -1,13 +1,11 @@
 /*
     @Author: Yinghua Zhou
     Student ID: 1308266
-
-    This thread is responsible for managing the worker threads,
-    spawn new workers when necessary, and terminate workers when they are idle for a period.
  */
 
 import java.net.Socket;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class WorkerPoolManager{
     private final int corePoolSize;
@@ -17,6 +15,7 @@ public class WorkerPoolManager{
     private final Dictionary dict;
     private volatile BlockingQueue<Socket> clientQueue;
     private final WorkerThread[] workerThreads;
+    private volatile AtomicInteger numRequestsProcessed = new AtomicInteger(0);
 
     public WorkerPoolManager(int corePoolSize, int maximumPoolSize, int keepAliveTimeSec, BlockingQueue<Socket> clientQueue, Dictionary dict) {
         this.corePoolSize = corePoolSize;
@@ -32,7 +31,7 @@ public class WorkerPoolManager{
     {
         for(int i = 0; i < this.corePoolSize; i++)
         {
-            this.workerThreads[i] = new WorkerThread(i, this.clientQueue, this.dict);
+            this.workerThreads[i] = new WorkerThread(i, this.clientQueue, this.dict, this.numRequestsProcessed);
             this.workerThreads[i].start();
         }
 
@@ -45,11 +44,11 @@ public class WorkerPoolManager{
 
         if (!success)
         {
-            if(additionalWorkerThreadList.size() < maximumPoolSize) // Whether max pool size is reached
+            if(additionalWorkerThreadList.size() < maximumPoolSize - corePoolSize) // Whether max pool size is reached
             {
                 // Create a new worker thread
                 int newWorkerId = corePoolSize + additionalWorkerThreadList.size(); // First additional worker thread will have tid = corePoolSize
-                WorkerThread newWorkerThread = new WorkerThread(newWorkerId, this.clientQueue, this.dict, this.keepAliveTimeSec, this.additionalWorkerThreadList);
+                WorkerThread newWorkerThread = new WorkerThread(newWorkerId, this.clientQueue, this.dict, this.numRequestsProcessed, this.keepAliveTimeSec, this.additionalWorkerThreadList);
                 additionalWorkerThreadList.put(newWorkerId, newWorkerThread);
                 newWorkerThread.start();
 
@@ -73,5 +72,17 @@ public class WorkerPoolManager{
         for (WorkerThread workerThread : this.workerThreads) {
             workerThread.terminate();
         }
+    }
+
+    public Dictionary getDict() {
+        return dict;
+    }
+
+    public AtomicInteger getNumRequestsProcessed() {
+        return numRequestsProcessed;
+    }
+
+    public ConcurrentHashMap<Integer, WorkerThread> getAdditionalWorkerThreadList() {
+        return additionalWorkerThreadList;
     }
 }

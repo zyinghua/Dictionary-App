@@ -29,7 +29,7 @@ public class DictionaryClient {
             System.out.println("Input 'remove' for removing a word.");
             System.out.println("Input 'query' for querying a word.");
             System.out.println("Input 'update' for updating a word.");
-            System.out.println("Input 'quit' to quit the program.");
+            System.out.println("Input 'quit' to quit the program.\n");
 
             System.out.println("Please select an operation from above: ");
             String op = sc.nextLine().toLowerCase();
@@ -126,7 +126,7 @@ public class DictionaryClient {
             System.exit(1);
         } catch (IOException e) {
             String err = "IO Exception encountered when connecting with the server: " + e.getMessage()
-                    + ".\n This may because the server is not up at the moment.";
+                    + ".\nThis may because the server is not up at the moment, or is overloaded.";
 
             if (isGUI)
             {

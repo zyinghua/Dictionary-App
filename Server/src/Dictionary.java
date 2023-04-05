@@ -31,7 +31,7 @@ public class Dictionary {
         }
     }
 
-    private void loadDictDataFromFile()
+    private synchronized void loadDictDataFromFile()
     {
         try
         {
@@ -50,7 +50,7 @@ public class Dictionary {
         }
     }
 
-    public void writeDictDataToFile()
+    public synchronized void writeDictDataToFile()
     {
         // convert the map to a JSON string and write it to a file
         try{

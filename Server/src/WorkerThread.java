@@ -22,18 +22,21 @@ public class WorkerThread extends Thread{
     private volatile boolean isRunning;
     private int keepAliveTimeSec = -1;
     private volatile ConcurrentHashMap<Integer, WorkerThread> additionalWorkerThreadList = null;
+    private volatile AtomicInteger numRequestsProcessed;
 
-    public WorkerThread(int tid, BlockingQueue<Socket> clientQueue, Dictionary dict) {
+    public WorkerThread(int tid, BlockingQueue<Socket> clientQueue, Dictionary dict, AtomicInteger numRequestsProcessed) {
         this.tid = tid;
         this.clientQueue = clientQueue;
         this.dict = dict;
+        this.numRequestsProcessed = numRequestsProcessed;
         this.isRunning = true;
     }
 
-    public WorkerThread(int tid, BlockingQueue<Socket> clientQueue, Dictionary dict, int keepAliveTimeSec, ConcurrentHashMap<Integer, WorkerThread> additionalWorkerThreadList) {
+    public WorkerThread(int tid, BlockingQueue<Socket> clientQueue, Dictionary dict, AtomicInteger numRequestsProcessed, int keepAliveTimeSec, ConcurrentHashMap<Integer, WorkerThread> additionalWorkerThreadList) {
         this.tid = tid;
         this.clientQueue = clientQueue;
         this.dict = dict;
+        this.numRequestsProcessed = numRequestsProcessed;
         this.keepAliveTimeSec = keepAliveTimeSec;
         this.additionalWorkerThreadList = additionalWorkerThreadList;
         this.isRunning = true;
@@ -84,6 +87,7 @@ public class WorkerThread extends Thread{
                     oos.close();
                     ois.close();
                     clientConn.close();
+                    numRequestsProcessed.incrementAndGet();
                 }
                 else if(this.getTid() >= 20)
                 {
@@ -94,51 +98,51 @@ public class WorkerThread extends Thread{
                 }
 
             } catch (InterruptedException e) {
-                //System.err.println("[Worker thread " + this.tid + "] interrupted, Message: " + e.getMessage());
-
                 if (clientConn != null) {
                     try {
                         ObjectOutputStream oos = new ObjectOutputStream(clientConn.getOutputStream());
 
-                        oos.writeObject(new FailureResponse(Operation.UNKNOWN, "Server is shutting down."));
+                        oos.writeObject(new FailureResponse(Operation.UNKNOWN, "Process interrupted. Possible cause: server is shutting down."));
                         oos.flush();
 
                         oos.close();
                         clientConn.close();
-                    } catch (IOException ioException) {
-                        System.err.println("[Worker thread " + this.tid + "] Error on closing client connection: " + ioException.getMessage());
+                    } catch (IOException ioe) {
+                        System.err.println("[Worker thread " + this.tid + "] Error on closing client connection: " + ioe.getMessage());
                     }
                 }
 
-                // Close any connections in the blocking queue
-                while (!clientQueue.isEmpty()) {
-                    Socket clientConnToClose = clientQueue.poll();
-                    try {
-                        if (clientConnToClose != null)
-                        {
-                            ObjectOutputStream oos = new ObjectOutputStream(clientConnToClose.getOutputStream());
+                if(!isRunning)
+                {
+                    //Termination called. Close any connections in the blocking queue
+                    while (!clientQueue.isEmpty()) {
+                        Socket clientConnToClose = clientQueue.poll();
+                        try {
+                            if (clientConnToClose != null)
+                            {
+                                ObjectOutputStream oos = new ObjectOutputStream(clientConnToClose.getOutputStream());
 
-                            oos.writeObject(new FailureResponse(Operation.UNKNOWN, "Server is shutting down."));
-                            oos.flush();
+                                oos.writeObject(new FailureResponse(Operation.UNKNOWN, "Server is shutting down."));
+                                oos.flush();
 
-                            oos.close();
-                            clientConnToClose.close();
+                                oos.close();
+                                clientConnToClose.close();
+                            }
+                        } catch (IOException ioe) {
+                            System.err.println("[Worker thread " + this.tid + "] Error closing socket: " + ioe.getMessage());
+                        } catch (NullPointerException npe) {
+                            System.err.println("[Worker thread " + this.tid + "] Null Pointer Exception encountered when closing unprocessed sockets: " + npe.getMessage());
                         }
-                    } catch (IOException ioe) {
-                        System.err.println("[Worker thread " + this.tid + "] Error closing socket: " + ioe.getMessage());
-                    } catch (NullPointerException npe) {
-                        System.err.println("[Worker thread " + this.tid + "] Null Pointer Exception encountered when closing unprocessed sockets: " + npe.getMessage());
                     }
                 }
 
                 System.exit(0);
 
-            } catch (EOFException e)
-            {
+            } catch (EOFException e) {
                 System.err.println("Connection unexpectedly ended by client "
                         + (clientConn.getInetAddress() == null? clientConn.getInetAddress() : "UNKNOWN") + "\n" + e.getMessage());
             } catch (IOException | ClassNotFoundException e) {
-                System.err.println("Error on processing socket connection: " +  e.getMessage());
+                System.err.println("[Worker thread " + this.tid + "] Exception on processing socket connection: " +  e.getMessage());
             } catch (NullPointerException e) {
                 System.err.println("[Worker thread " + this.tid + "] Null Pointer Exception: " + e.getMessage() + ", Cause: " + e.getCause());
             } catch (Exception e) {
