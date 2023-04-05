@@ -99,7 +99,7 @@ public class DictionaryClient {
             return response;
 
         }catch (SocketTimeoutException e) {
-            String err = "Request timed out. This may because the server is not up at the moment.\n" + e.getMessage();
+            String err = "Request timed out. This may because the server is not up at the moment or is not able to process requests.\n" + e.getMessage();
 
             if (isGUI)
             {

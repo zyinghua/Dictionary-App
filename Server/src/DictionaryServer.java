@@ -137,6 +137,7 @@ public class DictionaryServer {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 requestReceiver.terminate();
                 autoFileSaver.terminate();
+                workerPoolManager.terminate();
             }));
 
             System.out.println("\nServer started successfully. Listening on port " + args[0] + " for incoming connections...");
