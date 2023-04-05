@@ -10,12 +10,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class AutoFileSaver extends Thread{
+    private long period;
     private final Dictionary dict;
     private volatile boolean shutdown;
     private final AtomicInteger verbose;
 
-    public AutoFileSaver(Dictionary dict, AtomicInteger verbose)
+    public AutoFileSaver(long period, Dictionary dict, AtomicInteger verbose)
     {
+        this.period = period;
         this.dict = dict;
         this.shutdown = false;
         this.verbose = verbose;
@@ -29,7 +31,7 @@ public class AutoFileSaver extends Thread{
         while(!shutdown)
         {
             try {
-                Thread.sleep(5000);
+                Thread.sleep(this.period);
             } catch (InterruptedException e) {
                 System.err.println("[Auto File Saver] Thread interrupted, Message: " + e.getMessage());
             }

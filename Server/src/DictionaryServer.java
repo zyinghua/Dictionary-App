@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class DictionaryServer {
     public static final String USAGE = "Usage: java -jar Server.jar <port> <dictionary-file>[optional]";
     private static final String defaultFileName = "dictionary_data.json"; // Used when no default file is provided
+    private static final int autoFileSaveIntervalMs = 5000; // 5 seconds
     private static final int corePoolSize = 20;
     private static final int maximumPoolSize = 40;
     private static final int keepAliveTimeSec = 30;
@@ -117,19 +118,19 @@ public class DictionaryServer {
             System.exit(1);
         }
 
-        BlockingQueue<Socket> clientQueue = new ArrayBlockingQueue<>(queueCapacity);
-
         try (ServerSocket serverSocket = new ServerSocket(Integer.parseInt(args[0]))) {
             System.out.println("Server starting...\n");
 
             String fileName = args.length == 2 ? args[1] : defaultFileName;
 
-            AtomicInteger verbose = new AtomicInteger(UtilsItems.VERBOSE_OFF);
             Dictionary dict = new Dictionary(args.length == 2, fileName);
-            AutoFileSaver autoFileSaver = new AutoFileSaver(dict, verbose);
-            autoFileSaver.start();
+            AtomicInteger verbose = new AtomicInteger(UtilsItems.VERBOSE_OFF);
+            BlockingQueue<Socket> clientQueue = new ArrayBlockingQueue<>(queueCapacity);
 
             WorkerPoolManager workerPoolManager = new WorkerPoolManager(corePoolSize, maximumPoolSize, keepAliveTimeSec, clientQueue, dict, verbose);
+
+            AutoFileSaver autoFileSaver = new AutoFileSaver(autoFileSaveIntervalMs, dict, verbose);
+            autoFileSaver.start();
 
             RequestReceiver requestReceiver = new RequestReceiver(serverSocket, workerPoolManager, verbose);
             requestReceiver.start();
