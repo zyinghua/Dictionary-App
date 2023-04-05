@@ -114,7 +114,7 @@ public class WorkerThread extends Thread{
                     try {
                         ObjectOutputStream oos = new ObjectOutputStream(clientConn.getOutputStream());
 
-                        oos.writeObject(new FailureResponse(Operation.UNKNOWN, "Process interrupted. Possible cause: server is shutting down."));
+                        oos.writeObject(new FailureResponse(Operation.UNKNOWN, "Process interrupted. Failed to process request. Possible cause: server is shutting down."));
                         oos.flush();
 
                         oos.close();
@@ -134,7 +134,7 @@ public class WorkerThread extends Thread{
                             {
                                 ObjectOutputStream oos = new ObjectOutputStream(clientConnToClose.getOutputStream());
 
-                                oos.writeObject(new FailureResponse(Operation.UNKNOWN, "Server is shutting down."));
+                                oos.writeObject(new FailureResponse(Operation.UNKNOWN, "Failed to process request as the server is shutting down."));
                                 oos.flush();
 
                                 oos.close();
