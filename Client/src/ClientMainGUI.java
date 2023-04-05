@@ -35,8 +35,8 @@ public class ClientMainGUI extends JFrame{
     private static final String UPDATE_BTN_TEXT = "Update a word";
     public String preservedRequestHistory = "";
 
-    public String serverAddress;
-    public int serverPort;
+    private String serverAddress;
+    private int serverPort;
 
     private JPanel panel;
     private JLabel headingLabel;
@@ -128,10 +128,18 @@ public class ClientMainGUI extends JFrame{
     {
         Response response = DictionaryClient.checkServerValidity(true, serverAddress, serverPort);
 
-        if (response.getStatus() == Result.FAILURE)
+        if (response.getStatus() != Result.SUCCESS)
         {
             JOptionPane.showMessageDialog(this, ((FailureResponse)response).getMessage());
             System.exit(1);
         }
+    }
+
+    public int getServerPort() {
+        return serverPort;
+    }
+
+    public String getServerAddress() {
+        return serverAddress;
     }
 }

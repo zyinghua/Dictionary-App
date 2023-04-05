@@ -1,23 +1,25 @@
 /*
     @Author: Yinghua Zhou
     Student ID: 1308266
+
+    This thread is mainly responsible for receiving client requests and put them into the queue.
  */
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.concurrent.BlockingQueue;
 
 public class RequestReceiver extends Thread{
     private volatile boolean isRunning;
-    private ServerSocket serverSocket;
-    private Dictionary dict;
+    private volatile ServerSocket serverSocket;
+    private final WorkerPoolManager workerPoolManager;
 
-    public RequestReceiver(ServerSocket serverSocket, Dictionary dict,
-                            int corePoolSize, int maxPoolSize, long keepAliveTime, int queueCapacity)
+    public RequestReceiver(ServerSocket serverSocket, WorkerPoolManager workerPoolManager)
     {
         this.serverSocket = serverSocket;
-        this.dict = dict;
+        this.workerPoolManager = workerPoolManager;
         this.isRunning = true;
     }
 
@@ -30,7 +32,7 @@ public class RequestReceiver extends Thread{
                 Socket clientConn = serverSocket.accept(); // wait and accept a connection
                 System.out.println("Received a client request from: " + clientConn.getInetAddress());
 
-                this.workerPoolManager.executeTask(new Task(clientConn, dict));
+                workerPoolManager.addClient(clientConn);
             } catch (SocketException e) {
                 if (e.getMessage().equals("Socket closed")) {
                     // server socket is closed, this thread was called to terminate
@@ -52,6 +54,5 @@ public class RequestReceiver extends Thread{
     public synchronized void terminate()
     {
         this.isRunning = false;
-
     }
 }

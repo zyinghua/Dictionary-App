@@ -22,6 +22,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
 public class ClientCRUDGUI extends JFrame {
+    private ClientMainGUI previousFrame;
     private Operation op;
     private static final String PROMPT_WORD = "Please enter the word: ";
     private static final String PROMPT_MEANINGS = "Please enter a meaning of the word: ";
@@ -31,7 +32,7 @@ public class ClientCRUDGUI extends JFrame {
     private final JButton confirmButton;
     private final JTextPane textPane;
     private StyledDocument textPaneDoc;
-    Request request;
+    private Request request;
     private int state = 0;  // 0 = word not entered, 1 = word entered, 2+ = respective number - 1 of meanings entered
     private final Style redText, blackText, blueText, greyText;
     private static final int USER_INPUT = 0;
@@ -43,6 +44,7 @@ public class ClientCRUDGUI extends JFrame {
         setSize(ClientMainGUI.FRAME_WIDTH, ClientMainGUI.FRAME_HEIGHT);
 
         this.op = op;
+        this.previousFrame = previousFrame;
         initialiseRequest();
 
         JPanel panel = new JPanel(new BorderLayout());  // Main panel
@@ -147,9 +149,7 @@ public class ClientCRUDGUI extends JFrame {
                         else
                         {
                             // Ready to send request
-                            Response response = DictionaryClient.sendRequest(true, request, previousFrame.serverAddress, previousFrame.serverPort);
-                            resetAllToInitialState(); // Clear the data relevant to the previous operation which the response has been received
-                            handleResponse(response);
+                            requestEmission(request);
                         }
                     }
                     else if(inputField.getForeground() == Color.gray || inputField.getText().equals(""))
@@ -173,9 +173,7 @@ public class ClientCRUDGUI extends JFrame {
                         ((AddUpdateRequest) request).addMeaning(inputField.getText());
                         appendTextToTextPane(USER_INPUT, "Meaning " + state + ": " + inputField.getText() + "\n");
 
-                        Response response = DictionaryClient.sendRequest(true, request, previousFrame.serverAddress, previousFrame.serverPort);
-                        resetAllToInitialState(); // Clear the data relevant to the previous operation which the response has been received
-                        handleResponse(response);
+                        requestEmission(request);
                     }
                 }
                 else
@@ -189,9 +187,7 @@ public class ClientCRUDGUI extends JFrame {
                         appendTextToTextPane(USER_INPUT, "Meaning " + state + ": " + inputField.getText() + "\n");
                     }
 
-                    Response response = DictionaryClient.sendRequest(true, request, previousFrame.serverAddress, previousFrame.serverPort);
-                    resetAllToInitialState(); // Clear the data relevant to the previous operation which the response has been received
-                    handleResponse(response);
+                    requestEmission(request);
                 }
 
             }
@@ -334,12 +330,49 @@ public class ClientCRUDGUI extends JFrame {
                 case SERVER_ERROR_RESPONSE -> this.redText; // Server error response
                 default -> null;
             });
-        } catch (BadLocationException e)
-        {
+        } catch (BadLocationException e) {
             JOptionPane.showMessageDialog(null, "[Internal Error] Operation at an invalid position " +
                     "when inserting text to the screen. "  + e.getMessage(), "Bad Location Exception", JOptionPane.ERROR_MESSAGE);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "[Internal Error]: " + e.getMessage() + " when inserting text to the screen.", "Unknown Exception", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void requestEmission(Request request)
+    {
+        this.inputField.setText(""); // Clear the input field
+
+        // Spawns another thread to send the request to the server, avoid freezing the GUI
+        new Thread(() -> {
+            LoadingDialog loadingDialog = new LoadingDialog("Waiting for response...");
+
+            new Thread(() -> {
+                loadingDialog.setVisible(true);
+            }).start();
+
+            Response response = DictionaryClient.sendRequest(true, request, this.previousFrame.getServerAddress(), this.previousFrame.getServerPort());
+
+            new Thread(loadingDialog::dispose).start();
+
+            resetAllToInitialState(); // Clear the data relevant to the previous operation which the response has been received
+            handleResponse(response);
+        }).start();
+    }
+
+    public static class LoadingDialog extends JDialog {
+        private final JLabel messageLabel;
+
+        public LoadingDialog(String message) {
+            messageLabel = new JLabel(message, SwingConstants.CENTER);
+            getContentPane().add(messageLabel);
+            setSize(300, 100);
+            setLocationRelativeTo(null);
+            setModal(true);
+            setTitle("Loading");
+        }
+
+        public void setMessage(String message) {
+            messageLabel.setText(message);
         }
     }
 }

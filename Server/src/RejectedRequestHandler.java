@@ -4,7 +4,8 @@
  */
 
 import Messages.FailureResponse;
-import Utils.Operation;
+import Messages.UnprocessedResponse;
+import Utils.*;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -22,17 +23,20 @@ public class RejectedRequestHandler extends Thread{
     public void run() {
         try {
             ObjectOutputStream oos = new ObjectOutputStream(clientConn.getOutputStream());
-            oos.writeObject(new FailureResponse(Operation.UNKNOWN, "Server is overloaded. Please try again later."));
+            oos.writeObject(new UnprocessedResponse(UtilsMsg.SERVER_OVERLOAD_REJECT_MSG));
             oos.flush();
 
             oos.close();
             clientConn.close();
         } catch (EOFException e)
         {
-            System.out.println("[Rejected Request Handler] Connection illegally ended by client " + clientConn.getInetAddress() + "\n" + e.getMessage());
-        }
-        catch (IOException e) {
-            System.err.println("[Rejected Request Handler] Error: " + e.getMessage());
+            System.err.println("[Rejected Request Handler] Connection illegally ended by client " + clientConn.getInetAddress() + "\n" + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("[Rejected Request Handler] IO Exception: " + e.getMessage() + ". On client address: " + clientConn.getInetAddress());
+        } catch (NullPointerException e) {
+            System.err.println("[Rejected Request Handler] Null Pointer Exception: " + e.getMessage() + ". On client address: " + clientConn.getInetAddress());
+        } catch (Exception e) {
+            System.err.println("[Rejected Request Handler] Exception: " + e.getMessage() + ". On client address: " + clientConn.getInetAddress());
         }
     }
 }

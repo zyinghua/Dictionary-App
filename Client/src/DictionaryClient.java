@@ -8,13 +8,14 @@ import Utils.*;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class DictionaryClient {
+    private static final int REQUEST_TIMEOUT = 7000;
     private static final String USAGE = "Usage: java -jar Client.jar <serverAddress> <serverPort> <Open with GUI? '0' for No, '1' for Yes>";
     public static final String ERROR_EMPTY_WORD = "Please enter a word.";
     public static final String ERROR_INVALID_WORD = "Word must not be empty and not have any spaces, please try again.";
@@ -46,7 +47,7 @@ public class DictionaryClient {
 
     public static boolean checkWordValidity(String word)
     {
-        return !word.isEmpty() && word.matches(Utils.WORD_REGEX);
+        return !word.isEmpty() && word.matches(UtilsMsg.WORD_REGEX);
     }
 
     private static String promptWord(Scanner sc)
@@ -81,6 +82,7 @@ public class DictionaryClient {
         try
         {
             Socket client = new Socket(serverAddress, serverPort);
+            client.setSoTimeout(REQUEST_TIMEOUT);
 
             ObjectOutputStream oos = new ObjectOutputStream(client.getOutputStream());
             ObjectInputStream ois = new ObjectInputStream(client.getInputStream());
@@ -96,10 +98,21 @@ public class DictionaryClient {
 
             return response;
 
+        }catch (SocketTimeoutException e) {
+            String err = "Request timed out. This may because the server is not up at the moment.\n" + e.getMessage();
+
+            if (isGUI)
+            {
+                return new FailureResponse(request.getOp(), err);
+            }
+            else {
+                System.err.println(err);
+                System.exit(1);
+            }
         } catch (ClassNotFoundException e) {
             String err = "[Error on parsing response] Class not found: " + e.getMessage();
             System.err.println(err);
-            return new FailureResponse(Operation.UNKNOWN, err);
+            return new FailureResponse(request.getOp(), err);
         }
         catch (NumberFormatException e) {
             // Exception happening on Command Line start-up
@@ -111,14 +124,13 @@ public class DictionaryClient {
             System.out.println(USAGE);
             System.err.println("Cannot find the specified host. Please check host name: " + e.getMessage());
             System.exit(1);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             String err = "IO Exception encountered when connecting with the server: " + e.getMessage()
                     + ".\n This may because the server is not up at the moment.";
 
             if (isGUI)
             {
-                return new FailureResponse(Operation.UNKNOWN, err);
+                return new FailureResponse(request.getOp(), err);
             }
             else {
                 System.err.println(err);
@@ -130,7 +142,7 @@ public class DictionaryClient {
             System.exit(1);
         }
 
-        return new FailureResponse(Operation.UNKNOWN, "Unknown error when sending request.");
+        return new FailureResponse(request.getOp(), "Unknown error when sending request.");
     }
 
     private static void openWithCUI(String[] args)
@@ -235,6 +247,9 @@ public class DictionaryClient {
                     }
                     System.out.println("------------------------------");
                     System.out.println("\n");
+                } else if(response instanceof UnprocessedResponse)
+                {
+                    System.err.println(((UnprocessedResponse) response).getMessage());
                 }
                 else
                 {

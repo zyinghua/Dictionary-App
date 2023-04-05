@@ -7,5 +7,6 @@ package Utils;
 
 public enum Result {
     SUCCESS,
-    FAILURE
+    FAILURE,
+    UNPROCESSED
 }
