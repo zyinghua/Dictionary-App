@@ -77,7 +77,7 @@ public class WorkerThread extends Thread{
                 if(this.keepAliveTimeSec != -1)
                     clientConn = clientQueue.poll(this.keepAliveTimeSec, java.util.concurrent.TimeUnit.SECONDS);
                 else
-                    clientConn = clientQueue.poll();
+                    clientConn = clientQueue.take();
 
                 if(clientConn != null)
                 {
@@ -100,6 +100,7 @@ public class WorkerThread extends Thread{
                 }
                 else if(this.getTid() >= 20)
                 {
+                    // Idle for keepAliveTimeSec seconds, terminate this additional worker thread
                     this.isRunning = false;
 
                     if(this.additionalWorkerThreadList != null)
@@ -107,6 +108,8 @@ public class WorkerThread extends Thread{
 
                     if(this.verbose.get() >= UtilsItems.VERBOSE_ON_LOW)
                         System.out.println("[Additional Worker thread " + this.tid + "] terminated, due to being idle for " + this.keepAliveTimeSec + " seconds.");
+                } else {
+                    throw new NullPointerException("[Worker thread] Null client socket encountered in core worker thread " + this.tid + ".");
                 }
 
             } catch (InterruptedException e) {
@@ -148,8 +151,6 @@ public class WorkerThread extends Thread{
                     }
                 }
 
-                System.exit(0);
-
             } catch (EOFException e) {
                 System.err.println("Connection unexpectedly ended by client "
                         + (clientConn.getInetAddress() == null? clientConn.getInetAddress() : "UNKNOWN") + "\n" + e.getMessage());
@@ -162,7 +163,8 @@ public class WorkerThread extends Thread{
             }
         }
 
-        System.out.println("[Worker thread " + this.tid + "] Terminated.");
+        if (verbose.get() >= UtilsItems.VERBOSE_ON_LOW)
+            System.out.println("[Worker thread " + this.tid + "] Terminated.");
     }
 
     public int getTid() {
@@ -171,5 +173,6 @@ public class WorkerThread extends Thread{
 
     public synchronized void terminate() {
         this.isRunning = false;
+        this.interrupt();
     }
 }

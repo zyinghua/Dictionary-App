@@ -33,7 +33,7 @@ public class AutoFileSaver extends Thread{
             try {
                 Thread.sleep(this.period);
             } catch (InterruptedException e) {
-                System.err.println("[Auto File Saver] Thread interrupted, Message: " + e.getMessage());
+                if(!shutdown) System.err.println("[Auto File Saver] Thread interrupted, Message: " + e.getMessage());
             }
 
             this.dict.writeDictDataToFile();
@@ -48,5 +48,6 @@ public class AutoFileSaver extends Thread{
     public synchronized void terminate()
     {
         this.shutdown = true;
+        this.interrupt();
     }
 }

@@ -45,7 +45,7 @@ public class DictionaryServer {
                 switch (command) {
                     case "quit" -> {
                         System.out.println("\n--------------------------");
-                        System.out.println("Server is shutting down... Please wait.");
+                        System.out.println("Server is shutting down...");
                         System.out.println("--------------------------\n");
                     }
                     case "save" -> {
