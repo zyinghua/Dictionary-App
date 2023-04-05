@@ -11,7 +11,6 @@ import java.net.Socket;
 import java.util.Scanner;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class DictionaryServer {
@@ -23,18 +22,38 @@ public class DictionaryServer {
     private static final int keepAliveTimeSec = 30;
     private static final int queueCapacity = 100;
 
-    private static class CUIPrompt extends Thread {
-        private final WorkerPoolManager workerPoolManager;
-        private volatile AtomicBoolean shouldTerminate;
-        private volatile AtomicInteger verbose;
-        public CUIPrompt(WorkerPoolManager workerPoolManager, AtomicBoolean shouldTerminate, AtomicInteger verbose) {
-            this.workerPoolManager = workerPoolManager;
-            this.shouldTerminate = shouldTerminate;
-            this.verbose = verbose;
+    public static void main(String[] args) {
+        if (args.length < 1 || args.length > 2) {
+            // Handle invalid number of arguments
+            System.out.println(USAGE);
+            System.exit(1);
         }
 
-        @Override
-        public void run() {
+        try (ServerSocket serverSocket = new ServerSocket(Integer.parseInt(args[0]))) {
+            System.out.println("Server starting...\n");
+
+            String fileName = args.length == 2 ? args[1] : defaultFileName;
+
+            Dictionary dict = new Dictionary(args.length == 2, fileName);
+            AtomicInteger verbose = new AtomicInteger(UtilsItems.VERBOSE_OFF);
+            BlockingQueue<Socket> clientQueue = new ArrayBlockingQueue<>(queueCapacity);
+
+            WorkerPoolManager workerPoolManager = new WorkerPoolManager(corePoolSize, maximumPoolSize, keepAliveTimeSec, clientQueue, dict, verbose);
+
+            AutoFileSaver autoFileSaver = new AutoFileSaver(autoFileSaveIntervalMs, dict, verbose);
+            autoFileSaver.start();
+
+            RequestReceiver requestReceiver = new RequestReceiver(serverSocket, workerPoolManager, verbose);
+            requestReceiver.start();
+
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                requestReceiver.terminate();
+                autoFileSaver.terminate();
+                workerPoolManager.terminate();
+            }));
+
+            System.out.println("\nServer started successfully. Listening on port " + args[0] + " for incoming connections...");
+
             String command = "";
             Scanner scanner = new Scanner(System.in);
 
@@ -72,20 +91,20 @@ public class DictionaryServer {
                     case "verbose 0" -> {
                         verbose.set(0);
                         System.out.println("\n-------------------------");
-                        System.out.printf("Verbose mode is now: OFF");
-                        System.out.println("\n-------------------------\n");
+                        System.out.println("Verbose mode is now: OFF");
+                        System.out.println("-------------------------\n");
                     }
                     case "verbose 1" -> {
                         verbose.set(1);
                         System.out.println("\n-------------------------");
-                        System.out.printf("Verbose mode is now: LOW");
-                        System.out.println("\n-------------------------\n");
+                        System.out.println("Verbose mode is now: LOW");
+                        System.out.println("-------------------------\n");
                     }
                     case "verbose 2" -> {
                         verbose.set(2);
                         System.out.println("\n-------------------------");
-                        System.out.printf("Verbose mode is now: HIGH");
-                        System.out.println("\n-------------------------\n");
+                        System.out.println("Verbose mode is now: HIGH");
+                        System.out.println("-------------------------\n");
                     }
                     case "help" -> System.out.printf("""
                                                         
@@ -105,47 +124,6 @@ public class DictionaryServer {
                         System.out.println("****************\n");
                     }
                 }
-            }
-
-            shouldTerminate.set(true);
-        }
-    }
-
-    public static void main(String[] args) {
-        if (args.length < 1 || args.length > 2) {
-            // Handle invalid number of arguments
-            System.out.println(USAGE);
-            System.exit(1);
-        }
-
-        try (ServerSocket serverSocket = new ServerSocket(Integer.parseInt(args[0]))) {
-            System.out.println("Server starting...\n");
-
-            String fileName = args.length == 2 ? args[1] : defaultFileName;
-
-            Dictionary dict = new Dictionary(args.length == 2, fileName);
-            AtomicInteger verbose = new AtomicInteger(UtilsItems.VERBOSE_OFF);
-            BlockingQueue<Socket> clientQueue = new ArrayBlockingQueue<>(queueCapacity);
-
-            WorkerPoolManager workerPoolManager = new WorkerPoolManager(corePoolSize, maximumPoolSize, keepAliveTimeSec, clientQueue, dict, verbose);
-
-            AutoFileSaver autoFileSaver = new AutoFileSaver(autoFileSaveIntervalMs, dict, verbose);
-            autoFileSaver.start();
-
-            RequestReceiver requestReceiver = new RequestReceiver(serverSocket, workerPoolManager, verbose);
-            requestReceiver.start();
-
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                requestReceiver.terminate();
-                autoFileSaver.terminate();
-                workerPoolManager.terminate();
-            }));
-
-            System.out.println("\nServer started successfully. Listening on port " + args[0] + " for incoming connections...");
-            AtomicBoolean shouldTerminate = new AtomicBoolean(false);
-            new CUIPrompt(workerPoolManager, shouldTerminate, verbose).start();
-
-            while (!shouldTerminate.get()) {
             }
 
             autoFileSaver.terminate();

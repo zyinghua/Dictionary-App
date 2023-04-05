@@ -58,5 +58,6 @@ public class RequestReceiver extends Thread{
     public synchronized void terminate()
     {
         this.isRunning = false;
+        this.interrupt();
     }
 }
