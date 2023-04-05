@@ -16,14 +16,16 @@ public class WorkerPoolManager{
     private volatile BlockingQueue<Socket> clientQueue;
     private final WorkerThread[] workerThreads;
     private volatile AtomicInteger numRequestsProcessed = new AtomicInteger(0);
+    private volatile AtomicInteger verbose;
 
-    public WorkerPoolManager(int corePoolSize, int maximumPoolSize, int keepAliveTimeSec, BlockingQueue<Socket> clientQueue, Dictionary dict) {
+    public WorkerPoolManager(int corePoolSize, int maximumPoolSize, int keepAliveTimeSec, BlockingQueue<Socket> clientQueue, Dictionary dict, AtomicInteger verbose) {
         this.corePoolSize = corePoolSize;
         this.maximumPoolSize = maximumPoolSize;
         this.keepAliveTimeSec = keepAliveTimeSec;
         this.dict = dict;
         this.workerThreads = new WorkerThread[corePoolSize];
         this.clientQueue = clientQueue;
+        this.verbose = verbose;
         this.initialise();
     }
 
@@ -31,7 +33,7 @@ public class WorkerPoolManager{
     {
         for(int i = 0; i < this.corePoolSize; i++)
         {
-            this.workerThreads[i] = new WorkerThread(i, this.clientQueue, this.dict, this.numRequestsProcessed);
+            this.workerThreads[i] = new WorkerThread(i, this.clientQueue, this.dict, this.numRequestsProcessed, verbose);
             this.workerThreads[i].start();
         }
 
@@ -48,7 +50,7 @@ public class WorkerPoolManager{
             {
                 // Create a new worker thread
                 int newWorkerId = corePoolSize + additionalWorkerThreadList.size(); // First additional worker thread will have tid = corePoolSize
-                WorkerThread newWorkerThread = new WorkerThread(newWorkerId, this.clientQueue, this.dict, this.numRequestsProcessed, this.keepAliveTimeSec, this.additionalWorkerThreadList);
+                WorkerThread newWorkerThread = new WorkerThread(newWorkerId, this.clientQueue, this.dict, this.numRequestsProcessed, this.keepAliveTimeSec, this.additionalWorkerThreadList, verbose);
                 additionalWorkerThreadList.put(newWorkerId, newWorkerThread);
                 newWorkerThread.start();
 

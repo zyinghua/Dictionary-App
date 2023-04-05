@@ -5,6 +5,7 @@
 
 import Messages.*;
 import Utils.Operation;
+import Utils.UtilsMsg;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -23,22 +24,26 @@ public class WorkerThread extends Thread{
     private int keepAliveTimeSec = -1;
     private volatile ConcurrentHashMap<Integer, WorkerThread> additionalWorkerThreadList = null;
     private volatile AtomicInteger numRequestsProcessed;
+    private volatile AtomicInteger verbose;
 
-    public WorkerThread(int tid, BlockingQueue<Socket> clientQueue, Dictionary dict, AtomicInteger numRequestsProcessed) {
+    public WorkerThread(int tid, BlockingQueue<Socket> clientQueue, Dictionary dict, AtomicInteger numRequestsProcessed, AtomicInteger verbose) {
         this.tid = tid;
         this.clientQueue = clientQueue;
         this.dict = dict;
         this.numRequestsProcessed = numRequestsProcessed;
+        this.verbose = verbose;
         this.isRunning = true;
     }
 
-    public WorkerThread(int tid, BlockingQueue<Socket> clientQueue, Dictionary dict, AtomicInteger numRequestsProcessed, int keepAliveTimeSec, ConcurrentHashMap<Integer, WorkerThread> additionalWorkerThreadList) {
+    public WorkerThread(int tid, BlockingQueue<Socket> clientQueue, Dictionary dict, AtomicInteger numRequestsProcessed,
+                        int keepAliveTimeSec, ConcurrentHashMap<Integer, WorkerThread> additionalWorkerThreadList, AtomicInteger verbose) {
         this.tid = tid;
         this.clientQueue = clientQueue;
         this.dict = dict;
         this.numRequestsProcessed = numRequestsProcessed;
         this.keepAliveTimeSec = keepAliveTimeSec;
         this.additionalWorkerThreadList = additionalWorkerThreadList;
+        this.verbose = verbose;
         this.isRunning = true;
     }
 
@@ -88,6 +93,10 @@ public class WorkerThread extends Thread{
                     ois.close();
                     clientConn.close();
                     numRequestsProcessed.incrementAndGet();
+
+                    if (verbose.get() >= UtilsMsg.VERBOSE_ON_LOW)
+                        System.out.println("[Worker thread " + this.tid + "] processed a request from "
+                                + clientConn.getInetAddress() + ".\n" + request.toString() + "\nTotal Requests Processed Since Server Start-Up: " + numRequestsProcessed.get());
                 }
                 else if(this.getTid() >= 20)
                 {
@@ -95,6 +104,9 @@ public class WorkerThread extends Thread{
 
                     if(this.additionalWorkerThreadList != null)
                         this.additionalWorkerThreadList.remove(this.getTid());
+
+                    if(this.verbose.get() >= UtilsMsg.VERBOSE_ON_LOW)
+                        System.out.println("[Additional Worker thread " + this.tid + "] terminated, due to being idle for " + this.keepAliveTimeSec + " seconds.");
                 }
 
             } catch (InterruptedException e) {

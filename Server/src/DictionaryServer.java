@@ -3,6 +3,8 @@
     Student ID: 1308266
  */
 
+import Utils.UtilsMsg;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -10,6 +12,7 @@ import java.util.Scanner;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DictionaryServer {
     public static final String USAGE = "Usage: java -jar Server.jar <port> <dictionary-file>[optional]";
@@ -22,9 +25,11 @@ public class DictionaryServer {
     private static class CUIPrompt extends Thread {
         private final WorkerPoolManager workerPoolManager;
         private volatile AtomicBoolean shouldTerminate;
-        public CUIPrompt(WorkerPoolManager workerPoolManager, AtomicBoolean shouldTerminate) {
+        private volatile AtomicInteger verbose;
+        public CUIPrompt(WorkerPoolManager workerPoolManager, AtomicBoolean shouldTerminate, AtomicInteger verbose) {
             this.workerPoolManager = workerPoolManager;
             this.shouldTerminate = shouldTerminate;
+            this.verbose = verbose;
         }
 
         @Override
@@ -39,7 +44,7 @@ public class DictionaryServer {
                 switch (command) {
                     case "quit" -> {
                         System.out.println("\n--------------------------");
-                        System.out.println("Server is shutting down...");
+                        System.out.println("Server is shutting down... Please wait.");
                         System.out.println("--------------------------\n");
                     }
                     case "save" -> {
@@ -63,18 +68,36 @@ public class DictionaryServer {
                         System.out.println("Number of worker threads: " + (corePoolSize + workerPoolManager.getAdditionalWorkerThreadList().size()));
                         System.out.println("---------------------------------\n");
                     }
-
-                    case "help" -> System.out.println("""
-                            
+                    case "verbose 0" -> {
+                        verbose.set(0);
+                        System.out.println("\n-------------------------");
+                        System.out.printf("Verbose mode is now: OFF");
+                        System.out.println("\n-------------------------\n");
+                    }
+                    case "verbose 1" -> {
+                        verbose.set(1);
+                        System.out.println("\n-------------------------");
+                        System.out.printf("Verbose mode is now: LOW");
+                        System.out.println("\n-------------------------\n");
+                    }
+                    case "verbose 2" -> {
+                        verbose.set(2);
+                        System.out.println("\n-------------------------");
+                        System.out.printf("Verbose mode is now: HIGH");
+                        System.out.println("\n-------------------------\n");
+                    }
+                    case "help" -> System.out.printf("""
+                                                        
                             ------------------VALID COMMANDS--------------------
                             Type 'quit' to stop the server.
                             Type 'save' to save the dictionary data into file.
                             Type 'check dictionary' to check the dictionary data.
                             Type 'check requests' to check the number of requests processed.
                             Type 'check threads' to check the number of current worker threads.
+                            Type 'verbose {0,1,2}' to toggle verbose mode. (0 = off, 1 = Low, 2 = High) Verbose mode is currently: %s
                             ----------------------------------------------------
-                            
-                            """);
+                                                        
+                            """, verbose.get());
                     default -> {
                         System.out.println("\n****************");
                         System.out.println("Invalid command.");
@@ -101,13 +124,14 @@ public class DictionaryServer {
 
             String fileName = args.length == 2 ? args[1] : defaultFileName;
 
+            AtomicInteger verbose = new AtomicInteger(UtilsMsg.VERBOSE_OFF);
             Dictionary dict = new Dictionary(args.length == 2, fileName);
-            AutoFileSaver autoFileSaver = new AutoFileSaver(dict);
+            AutoFileSaver autoFileSaver = new AutoFileSaver(dict, verbose);
             autoFileSaver.start();
 
-            WorkerPoolManager workerPoolManager = new WorkerPoolManager(corePoolSize, maximumPoolSize, keepAliveTimeSec, clientQueue, dict);
+            WorkerPoolManager workerPoolManager = new WorkerPoolManager(corePoolSize, maximumPoolSize, keepAliveTimeSec, clientQueue, dict, verbose);
 
-            RequestReceiver requestReceiver = new RequestReceiver(serverSocket, workerPoolManager);
+            RequestReceiver requestReceiver = new RequestReceiver(serverSocket, workerPoolManager, verbose);
             requestReceiver.start();
 
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -117,7 +141,7 @@ public class DictionaryServer {
 
             System.out.println("\nServer started successfully. Listening on port " + args[0] + " for incoming connections...");
             AtomicBoolean shouldTerminate = new AtomicBoolean(false);
-            new CUIPrompt(workerPoolManager, shouldTerminate).start();
+            new CUIPrompt(workerPoolManager, shouldTerminate, verbose).start();
 
             while (!shouldTerminate.get()) {
             }

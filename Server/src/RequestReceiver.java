@@ -5,21 +5,27 @@
     This thread is mainly responsible for receiving client requests and put them into the queue.
  */
 
+import Utils.UtilsMsg;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class RequestReceiver extends Thread{
     private volatile boolean isRunning;
     private volatile ServerSocket serverSocket;
     private final WorkerPoolManager workerPoolManager;
 
-    public RequestReceiver(ServerSocket serverSocket, WorkerPoolManager workerPoolManager)
+    private volatile AtomicInteger verbose;
+
+    public RequestReceiver(ServerSocket serverSocket, WorkerPoolManager workerPoolManager, AtomicInteger verbose)
     {
         this.serverSocket = serverSocket;
         this.workerPoolManager = workerPoolManager;
+        this.verbose = verbose;
         this.isRunning = true;
     }
 
@@ -30,7 +36,9 @@ public class RequestReceiver extends Thread{
         {
             try {
                 Socket clientConn = serverSocket.accept(); // wait and accept a connection
-                //System.out.println("Received a client request from: " + clientConn.getInetAddress());
+
+                if(verbose.get() == UtilsMsg.VERBOSE_ON_HIGH)
+                    System.out.println("\n[Request Receiver] Received a client request from: " + clientConn.getInetAddress());
 
                 workerPoolManager.addClient(clientConn);
             } catch (SocketException e) {
