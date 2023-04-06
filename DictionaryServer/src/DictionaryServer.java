@@ -14,7 +14,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class DictionaryServer {
-    public static final String USAGE = "Usage: java -jar Server.jar <port> <dictionary-file>[optional]";
+    public static final String USAGE = "Usage: java -jar DictionaryServer.jar <port> <dictionary-file>[optional]";
     private static final String defaultFileName = "dictionary_data.json"; // Used when no default file is provided
     private static final int autoFileSaveIntervalMs = 5000; // 5 seconds
     private static final int corePoolSize = 20;

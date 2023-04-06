@@ -16,7 +16,7 @@ import java.util.Scanner;
 
 public class DictionaryClient {
     private static final int REQUEST_TIMEOUT = 7000;
-    private static final String USAGE = "Usage: java -jar Client.jar <serverAddress> <serverPort> <Open with GUI? '0' for No, '1' for Yes>";
+    private static final String USAGE = "Usage: java -jar DictionaryClient.jar <serverAddress> <serverPort> <Open with GUI? '0' for No, '1' for Yes>";
     public static final String ERROR_EMPTY_WORD = "Please enter a word.";
     public static final String ERROR_INVALID_WORD = "Word must contain at least one English letter and not have any spaces, please try again.";
     public static final String ERROR_EMPTY_MEANING = "Please enter at least one meaning.";
