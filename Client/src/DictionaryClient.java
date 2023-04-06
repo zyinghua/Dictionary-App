@@ -18,7 +18,7 @@ public class DictionaryClient {
     private static final int REQUEST_TIMEOUT = 7000;
     private static final String USAGE = "Usage: java -jar Client.jar <serverAddress> <serverPort> <Open with GUI? '0' for No, '1' for Yes>";
     public static final String ERROR_EMPTY_WORD = "Please enter a word.";
-    public static final String ERROR_INVALID_WORD = "Word must not be empty and not have any spaces, please try again.";
+    public static final String ERROR_INVALID_WORD = "Word must contain at least one English letter and not have any spaces, please try again.";
     public static final String ERROR_EMPTY_MEANING = "Please enter at least one meaning.";
 
     private static String promptOperation(Scanner sc)
@@ -60,6 +60,10 @@ public class DictionaryClient {
             if (checkWordValidity(word))
             {
                 return word;
+            }
+            else if(word.isEmpty())
+            {
+                System.out.println(ERROR_EMPTY_WORD + "\n");
             }
             else
             {
@@ -243,7 +247,7 @@ public class DictionaryClient {
                     System.out.println("The meanings of the word '" + queryResponse.getWord() + "' are: ");
                     for (int i = 0; i < queryResponse.getMeanings().size(); i++)
                     {
-                        System.out.println(i + ": " + queryResponse.getMeanings().get(i));
+                        System.out.println(i+1 + ": " + queryResponse.getMeanings().get(i));
                     }
                     System.out.println("------------------------------");
                     System.out.println("\n");
