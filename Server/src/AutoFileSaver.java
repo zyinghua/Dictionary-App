@@ -49,5 +49,6 @@ public class AutoFileSaver extends Thread{
     {
         this.shutdown = true;
         this.interrupt();
+        this.dict.writeDictDataToFile();
     }
 }

@@ -69,9 +69,13 @@ public class WorkerPoolManager{
         }
     }
 
-    public void terminate()
+    public synchronized void terminate()
     {
         for (WorkerThread workerThread : this.workerThreads) {
+            workerThread.terminate();
+        }
+
+        for (WorkerThread workerThread : this.additionalWorkerThreadList.values()) {
             workerThread.terminate();
         }
     }
