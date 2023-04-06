@@ -134,4 +134,9 @@ public class Dictionary {
             return new FailureResponse(Operation.UPDATE_WORD, UtilsItems.ERROR_WORD_NOT_FOUND);
         }
     }
+
+    @Override
+    public String toString() {
+        return getDict().toString();
+    }
 }

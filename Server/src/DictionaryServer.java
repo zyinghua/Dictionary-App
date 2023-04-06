@@ -75,7 +75,7 @@ public class DictionaryServer {
                     }
                     case "check dictionary" -> {
                         System.out.println("\n------------------------------");
-                        System.out.println(workerPoolManager.getDict().toString());
+                        System.out.println(dict);
                         System.out.println("------------------------------\n");
                     }
                     case "check requests" -> {
