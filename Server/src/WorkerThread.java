@@ -98,8 +98,9 @@ public class WorkerThread extends Thread{
                         System.out.println("[Worker thread " + this.tid + "] processed a request from "
                                 + clientConn.getInetAddress() + ".\n" + request.toString() + "\nTotal Requests Processed Since Server Start-Up: " + numRequestsProcessed.get());
                 }
-                else if(this.getTid() >= 20)
+                else if(this.keepAliveTimeSec != -1)
                 {
+                    // This is an additional worker thread
                     // Idle for keepAliveTimeSec seconds, terminate this additional worker thread
                     this.isRunning = false;
 
