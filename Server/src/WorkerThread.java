@@ -150,6 +150,8 @@ public class WorkerThread extends Thread{
                             System.err.println("[Worker thread " + this.tid + "] Null Pointer Exception encountered when closing unprocessed sockets: " + npe.getMessage());
                         }
                     }
+                } else{
+                    System.err.println("[Worker thread " + this.tid + "] Interrupted Exception: " + e.getMessage());
                 }
 
             } catch (EOFException e) {
